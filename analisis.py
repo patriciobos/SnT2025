@@ -35,17 +35,16 @@ print("Máximo tl_z_8m:", df['tl_z_8'].max())
 print("Máximo tl_z_half:", df['tl_z_half'].max())
 print("Máximo tl_max_z:", df['tl_max_z'].max())
 
-# Mostrar filas con valores no numéricos (NaN tras coerción)
-print("\nValores no numéricos en tl_z_half:")
-print(df[df['tl_z_half'].isna()][['tl_z_half']])
-
-print("\nValores no numéricos en tl_max_z:")
-print(df[df['tl_max_z'].isna()][['tl_max_z']])
-
 # Crear PDF
 with PdfPages("mapas_tl_z_all.pdf") as pdf:
     for i, col_TL in enumerate(columnas_TL):
-        TL = df[col_TL].astype(float).values
+        # Filtrar solo los datos con TL < 200 en esta profundidad
+        df_filtrado = df[pd.to_numeric(df[col_TL], errors='coerce') < 200].copy()
+
+        # Extraer coordenadas y TL de esta capa
+        lat_f = df_filtrado['latitud'].astype(float).values
+        lon_f = df_filtrado['longitud'].astype(float).values
+        TL = df_filtrado[col_TL].astype(float).values
 
         fig = plt.figure(figsize=(10, 9))
         ax_main = fig.add_axes((0.1, 0.1, 0.85, 0.85))
@@ -64,8 +63,8 @@ with PdfPages("mapas_tl_z_all.pdf") as pdf:
         m.drawmeridians(range(-70, -44, 5), labels=[0,0,0,1])
 
         # Proyección de coordenadas
-        x, y = m(lon, lat)
-
+        x, y = m(lon_f, lat_f)
+        
         # Dibujar TL
         sc = m.scatter(x, y, c=TL, s=1, cmap='viridis', edgecolors='none', zorder=5)
         cbar = plt.colorbar(sc, ax=ax_main, orientation='vertical', shrink=0.6, pad=0.02)
