@@ -132,10 +132,12 @@ with PdfPages(pdf_filename) as pdf:
         #########################
         # folium
         #########################
+        TL = np.array(TL, dtype=float)  # fuerza tipo float
+      
+        # Crear mapa Folium centrado en la región
+        center_lat = np.mean(df['lat'].to_numpy())
+        center_lon = np.mean(df['lon'].to_numpy())
 
-                # Crear mapa Folium centrado en la región
-        center_lat = np.mean(lat_f)
-        center_lon = np.mean(lon_f)
         m_folium = folium.Map(location=[center_lat, center_lon], zoom_start=5, tiles='CartoDB positron')
 
         # Colormap normalizado según TL
