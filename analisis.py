@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
-#from scipy.spatial import ConvexHull, Delaunay
+import glob
 
 # === Visualización: Matplotlib y Basemap ===
 import matplotlib.pyplot as plt
@@ -23,11 +23,10 @@ import branca.colormap as brc_cm
 # === Otros: Alphashape, Shapely, Xarray ===
 import alphashape
 from shapely.geometry import Point
-#from shapely.geometry.polygon import Polygon
 
 
 # === Cargar archivo ===
-filename = "data/pato-vienna-f50.0 Hz.csv"
+filename = "input-data/pato-vienna-f50.0 Hz.csv"
 basename = os.path.basename(filename)
 
 match = re.search(r"f([\d.]+)\s*Hz", basename)
@@ -178,8 +177,48 @@ with PdfPages(pdf_filename) as pdf:
                 tooltip=f"TL: {val:.1f} dB<br>Bat: {df.loc[(df['lat'] == lt) & (df['lon'] == ln), 'bat'].values[0]:.1f} m<br>Lat: {lt:.4f}<br>Lon: {ln:.4f}"
             ).add_to(m_folium)
 
+        # === Puntos E₁ a E₄ para superponer sobre el mapa con TL ===
+        puntos_e = [
+            {"nombre": "E₁", "lat": -38.5092, "lon": -56.4850},
+            {"nombre": "E₂", "lat": -44.9512, "lon": -63.8894},
+            {"nombre": "E₃", "lat": -46.0932, "lon": -64.9199},
+            {"nombre": "E₄", "lat": -46.8722, "lon": -64.8320},
+        ]
+
+        for p in puntos_e:
+            folium.Marker(
+                location=[p["lat"], p["lon"]],
+                icon=folium.Icon(color="blue", icon="star"),
+                tooltip=f"{p['nombre']}<br>Lat: {p['lat']:.4f}<br>Lon: {p['lon']:.4f}"
+            ).add_to(m_folium)
+
+
         # Guardar HTML
         folium_filename = f"{nombres_figura[i]}.html"
         m_folium.save(folium_filename)
 
 print("Mapas guardados en formato PNG.")
+
+# === Leer archivo TL_vs_f_E1_E4.csv ===
+archivo_csv = "TL_vs_f_E1_E4.csv"
+if os.path.exists(archivo_csv):
+    df_tl = pd.read_csv(archivo_csv, sep=",", decimal=",", quotechar='"')
+    df_tl.columns = df_tl.columns.str.strip()  # Limpia espacios accidentales
+
+    etiquetas = ["E1", "E2", "E3", "E4"]
+
+    for etiqueta in etiquetas:
+        plt.figure(figsize=(8, 5))
+        plt.plot(df_tl["frecuencia"], df_tl[etiqueta], marker='o')
+        plt.xlabel("Frecuencia [Hz]")
+        plt.ylabel("TL(f) [dB]")
+        plt.title(f"Curva TL vs Frecuencia - {etiqueta}")
+        plt.grid(True)
+        plt.tight_layout()
+        nombre_archivo = f"TL_vs_f_{etiqueta}.png"
+        plt.savefig(nombre_archivo, dpi=300)
+        plt.close()
+        print(f"Gráfico guardado: {nombre_archivo}")
+else:
+    print(f"Archivo no encontrado: {archivo_csv}")
+
