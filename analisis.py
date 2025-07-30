@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
-from scipy.spatial import ConvexHull, Delaunay
+#from scipy.spatial import ConvexHull, Delaunay
 
 # === Visualización: Matplotlib y Basemap ===
 import matplotlib.pyplot as plt
@@ -23,11 +23,11 @@ import branca.colormap as brc_cm
 # === Otros: Alphashape, Shapely, Xarray ===
 import alphashape
 from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-import xarray as xr
+#from shapely.geometry.polygon import Polygon
+
 
 # === Cargar archivo ===
-filename = "results/pato-vienna-f50.0 Hz.csv"
+filename = "data/pato-vienna-f50.0 Hz.csv"
 basename = os.path.basename(filename)
 
 match = re.search(r"f([\d.]+)\s*Hz", basename)
