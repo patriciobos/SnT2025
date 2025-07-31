@@ -17,9 +17,8 @@ columnas_coord = ["lat", "lon"]
 # Coordenadas objetivo con campo opcional "nombre"
 coordenadas_objetivo = [
     {"lat": -38.5092, "lon": -56.4850, "nombre": "ZAIS"},
-    {"lat": -44.9512, "lon": -63.8894, "nombre": "E1"},
-    {"lat": -46.0932, "lon": -64.9199, "nombre": "E2"},
-    {"lat": -46.8722, "lon": -64.8320, "nombre": "E3"},  
+    {"lat": -44.9512, "lon": -63.8894, "nombre": "GSJ"},
+    {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ"},  
 ]
 
 # === Detectar frecuencias disponibles (solo una vez, compartido por todos) ===

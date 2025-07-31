@@ -7,7 +7,7 @@ from matplotlib.ticker import AutoMinorLocator
 
 # === Configuración general ===
 carpeta_output = Path("output-data")
-carpeta_figuras = Path("figuras")
+carpeta_figuras = Path("output-data")
 carpeta_figuras.mkdir(parents=True, exist_ok=True)
 
 # === Función para graficar un archivo CSV ===
