@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Ronda_1_importado_a_GEarth.kml</name>
+	<Schema name="Ronda_1" id="S_Ronda_1_SSDSSS">
+		<SimpleField type="string" name="id_2"><displayName>&lt;b&gt;id&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="NOMBRE"><displayName>&lt;b&gt;NOMBRE&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="double" name="Sup"><displayName>&lt;b&gt;Sup&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="UTE"><displayName>&lt;b&gt;UTE&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="Empresas"><displayName>&lt;b&gt;Empresas&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="Ronda"><displayName>&lt;b&gt;Ronda&lt;/b&gt;</displayName>
+</SimpleField>
+	</Schema>
+	<Style id="falseColor0">
+		<BalloonStyle>
+			<text><![CDATA[<table border="0">
+  <tr><td><b>id</b></td><td>$[Ronda_1/id_2]</td></tr>
+  <tr><td><b>NOMBRE</b></td><td>$[Ronda_1/NOMBRE]</td></tr>
+  <tr><td><b>Sup</b></td><td>$[Ronda_1/Sup]</td></tr>
+  <tr><td><b>UTE</b></td><td>$[Ronda_1/UTE]</td></tr>
+  <tr><td><b>Empresas</b></td><td>$[Ronda_1/Empresas]</td></tr>
+  <tr><td><b>Ronda</b></td><td>$[Ronda_1/Ronda]</td></tr>
+</table>]]></text>
+		</BalloonStyle>
+		<PolyStyle>
+			<colorMode>random</colorMode>
+		</PolyStyle>
+	</Style>
+	<Style id="falseColor">
+		<BalloonStyle>
+			<text><![CDATA[<table border="0">
+  <tr><td><b>id</b></td><td>$[Ronda_1/id_2]</td></tr>
+  <tr><td><b>NOMBRE</b></td><td>$[Ronda_1/NOMBRE]</td></tr>
+  <tr><td><b>Sup</b></td><td>$[Ronda_1/Sup]</td></tr>
+  <tr><td><b>UTE</b></td><td>$[Ronda_1/UTE]</td></tr>
+  <tr><td><b>Empresas</b></td><td>$[Ronda_1/Empresas]</td></tr>
+  <tr><td><b>Ronda</b></td><td>$[Ronda_1/Ronda]</td></tr>
+</table>]]></text>
+		</BalloonStyle>
+		<PolyStyle>
+			<colorMode>random</colorMode>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="falseColor1">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#falseColor0</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#falseColor</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder id="layer 0">
+		<name>Ronda_1</name>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">44</SimpleData>
+					<SimpleData name="NOMBRE">MLO_124</SimpleData>
+					<SimpleData name="Sup">4420.06</SimpleData>
+					<SimpleData name="UTE">ENI 80% - Mitsui 10% - Tecpetrol 10%</SimpleData>
+					<SimpleData name="Empresas">ENI - MITSUI - TECPETROL</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-63.37499999999999,-54.0625,0 -63.37499999999999,-53.37499999999999,0 -63.49999999999999,-53.37499999999999,0 -64.24999999999999,-53.37499999999999,0 -64.24999999999999,-54.0625,0 -63.37499999999999,-54.0625,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">39</SimpleData>
+					<SimpleData name="NOMBRE">MLO_119</SimpleData>
+					<SimpleData name="Sup">4547.03</SimpleData>
+					<SimpleData name="UTE">Tullow 40% - Wintershall 27% - Pluspetrol 33%</SimpleData>
+					<SimpleData name="Empresas">TULLOW - WINTARSHALL - PLUSPETROL</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-63.49999999999999,-53.37499999999999,0 -63.37499999999999,-53.37499999999999,0 -62.5,-53.37499999999999,0 -62.5,-52.99999999999999,0 -62.625,-52.99999999999999,0 -62.625,-52.87499999999999,0 -62.875,-52.87499999999999,0 -62.875,-52.74999999999999,0 -63.12499999999999,-52.74999999999999,0 -63.12499999999999,-52.62499999999999,0 -63.49999999999999,-52.62499999999999,0 -63.49999999999999,-53.37499999999999,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">38</SimpleData>
+					<SimpleData name="NOMBRE">MLO_118</SimpleData>
+					<SimpleData name="Sup">4202.66</SimpleData>
+					<SimpleData name="UTE">Exxonmobil 70% - Qatar Petroleum 30%</SimpleData>
+					<SimpleData name="Empresas">EXXONMOBIL - QATAR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-64.24999999999999,-52.62499999999999,0 -64.24999999999999,-53.37499999999999,0 -63.49999999999999,-53.37499999999999,0 -63.49999999999999,-52.62499999999999,0 -64.24999999999999,-52.62499999999999,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">41</SimpleData>
+					<SimpleData name="NOMBRE">MLO_121</SimpleData>
+					<SimpleData name="Sup">4285.87</SimpleData>
+					<SimpleData name="UTE">Equinor 100%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-66.712935417,-54.04119417699996,0 -66.69721489999995,-54.04568804999996,0 -66.68149438299997,-54.05044573599996,0 -66.66712133799997,-54.05493860399996,0 -66.66487554999998,-54.05573141199994,0 -66.65589239699993,-54.05758123899995,0 -66.64601092899994,-54.05969522599997,0 -66.63388367199997,-54.06286600399994,0 -66.63340764515736,-54.06300599978637,0 -65.875,-54.0625,0 -65.875,-53.37499999999999,0 -66,-53.37499999999999,0 -66.69123630410211,-53.3749119499571,0 -66.68470000000002,-53.49529999999998,0 -66.73739999999999,-53.49629999999998,0 -66.73260000000001,-53.58609999999999,0 -66.73259989802189,-54.02961865460274,0 -66.72416435899996,-54.03458465399996,0 -66.712935417,-54.04119417699996,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">43</SimpleData>
+					<SimpleData name="NOMBRE">MLO_123</SimpleData>
+					<SimpleData name="Sup">3788.62</SimpleData>
+					<SimpleData name="UTE">TOTAL 37.5% - Equinor 37.5% - YPF S.A. 25%</SimpleData>
+					<SimpleData name="Empresas">TOTAL - EQUINOR - YPF</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-65.00000000000001,-54.0625,0 -64.24999999999999,-54.0625,0 -64.24999999999999,-53.37499999999999,0 -65.00000000000001,-53.37499999999999,0 -65.00000000000001,-54.0625,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">42</SimpleData>
+					<SimpleData name="NOMBRE">MLO_122</SimpleData>
+					<SimpleData name="Sup">4420.06</SimpleData>
+					<SimpleData name="UTE">Tullow 100%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-65.00000000000001,-53.37499999999999,0 -65.12500000000001,-53.37499999999999,0 -65.875,-53.37499999999999,0 -65.875,-54.0625,0 -65.00000000000001,-54.0625,0 -65.00000000000001,-53.37499999999999,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">37</SimpleData>
+					<SimpleData name="NOMBRE">MLO_117</SimpleData>
+					<SimpleData name="Sup">4903.1</SimpleData>
+					<SimpleData name="UTE">Exxonmobil 70% - Qatar Petroleum 30%</SimpleData>
+					<SimpleData name="Empresas">EXXONMOBIL - QATAR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-65.00000000000001,-53.37499999999999,0 -64.24999999999999,-53.37499999999999,0 -64.24999999999999,-52.62499999999999,0 -64.37499999999999,-52.62499999999999,0 -65.12500000000001,-52.62499999999999,0 -65.12500000000001,-53.37499999999999,0 -65.00000000000001,-53.37499999999999,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">34</SimpleData>
+					<SimpleData name="NOMBRE">MLO_114</SimpleData>
+					<SimpleData name="Sup">5942.03</SimpleData>
+					<SimpleData name="UTE">Tullow 40% - Wintershall 27% - Pluspetrol 33%</SimpleData>
+					<SimpleData name="Empresas">TULLOW - WINTARSHALL - PLUSPETROL</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-64.37499999999999,-52.62499999999999,0 -63.24999999999999,-52.62499999999999,0 -63.24999999999999,-52.5625,0 -63.37499999999999,-52.5625,0 -63.37499999999999,-52.4375,0 -63.43750000000001,-52.4375,0 -63.43750000000001,-52.31250000000001,0 -63.49999999999999,-52.31250000000001,0 -63.49999999999999,-52.12499999999999,0 -63.56250000000001,-52.12499999999999,0 -63.56250000000001,-51.74999999999999,0 -64.37499999999999,-51.74999999999999,0 -64.37499999999999,-52.62499999999999,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">33</SimpleData>
+					<SimpleData name="NOMBRE">MLO_113</SimpleData>
+					<SimpleData name="Sup">5826.27</SimpleData>
+					<SimpleData name="UTE">Exxonmobil 70% - Qatar Petroleum 30%</SimpleData>
+					<SimpleData name="Empresas">EXXONMOBIL - QATAR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-65.12500000000001,-52.62499999999999,0 -64.37499999999999,-52.62499999999999,0 -64.37499999999999,-51.74999999999999,0 -64.49999999999999,-51.74999999999999,0 -65.25000000000001,-51.74999999999999,0 -65.25000000000001,-52.62499999999999,0 -65.12500000000001,-52.62499999999999,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">19</SimpleData>
+					<SimpleData name="NOMBRE">CAN_113</SimpleData>
+					<SimpleData name="Sup">6578.61</SimpleData>
+					<SimpleData name="UTE">TOTAL 50% - BP 50%</SimpleData>
+					<SimpleData name="Empresas">TOTAL -BP</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-57.90121257354398,-41.58996307454971,0 -58.4280495848299,-42.22889754014361,0 -57.62174755520419,-42.6125140622915,0 -57.09485761534871,-41.98278476446091,0 -57.90121257354398,-41.58996307454971,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">13</SimpleData>
+					<SimpleData name="NOMBRE">CAN_107</SimpleData>
+					<SimpleData name="Sup">8370.26</SimpleData>
+					<SimpleData name="UTE">Shell 60% - Qatar Petroleum 40%</SimpleData>
+					<SimpleData name="Empresas">SHELL - QATAR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-55.9301573131419,-39.24427331322419,0 -56.75233523635481,-40.2239052024446,0 -56.1612331639756,-40.4990420857598,0 -56.1626106164786,-40.38897536179379,0 -55.7449376012998,-40.38516336831362,0 -55.7496828020738,-40.12788379601858,0 -55.5883106131762,-40.1260288621934,0 -55.5988191774796,-39.6114672301193,0 -55.17946426216829,-39.60540781904438,0 -55.9301573131419,-39.24427331322419,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">15</SimpleData>
+					<SimpleData name="NOMBRE">CAN_109</SimpleData>
+					<SimpleData name="Sup">7882.26</SimpleData>
+					<SimpleData name="UTE">Shell 60% - Qatar Petroleum 40%</SimpleData>
+					<SimpleData name="Empresas">SHELL - QATAR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-56.15748244619888,-40.79874695202238,0 -56.1612331639756,-40.4990420857598,0 -56.75233523635481,-40.2239052024446,0 -57.39783535275299,-40.99471257518289,0 -56.5862069742825,-41.37683599400219,0 -56.08143182287029,-40.7981104570216,0 -56.15748244619888,-40.79874695202238,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">17</SimpleData>
+					<SimpleData name="NOMBRE">CAN_111</SimpleData>
+					<SimpleData name="Sup">6325.19</SimpleData>
+					<SimpleData name="UTE">TOTAL 50% - BP 50%</SimpleData>
+					<SimpleData name="Empresas">TOTAL -BP</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-57.39783535275299,-40.99471257518289,0 -57.90121257354398,-41.58996307454971,0 -57.09485761534871,-41.98278476446091,0 -56.5862069742825,-41.37683599400219,0 -57.39783535275299,-40.99471257518289,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">20</SimpleData>
+					<SimpleData name="NOMBRE">CAN_114</SimpleData>
+					<SimpleData name="Sup">7084.81</SimpleData>
+					<SimpleData name="UTE">Equinor 50% - YPF S.A. 50%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR - YPF</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-57.09485761534871,-41.98278476446091,0 -57.62174755520419,-42.6125140622915,0 -56.72276215964808,-43.0338364373778,0 -56.21859492333229,-42.40484166944989,0 -57.09485761534871,-41.98278476446091,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">14</SimpleData>
+					<SimpleData name="NOMBRE">CAN_108</SimpleData>
+					<SimpleData name="Sup">2863.78</SimpleData>
+					<SimpleData name="UTE">Equinor 100%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-54.4776585868446,-39.93143412845681,0 -54.46481336649251,-40.15259074465911,0 -55.0374925568991,-40.163718602714,0 -55.00113199509268,-40.92722087534509,0 -54.21106663995781,-39.9939808389365,0 -54.4776585868446,-39.93143412845681,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">6</SimpleData>
+					<SimpleData name="NOMBRE">AUS_106</SimpleData>
+					<SimpleData name="Sup">2160.74</SimpleData>
+					<SimpleData name="UTE">Equinor 100%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-67.40467397436461,-53.61417042347954,0 -67.39092246469259,-53.61398758261819,0 -67.39073121007367,-53.61857215045464,0 -67.38532440799997,-53.62032564599996,0 -67.37005304799997,-53.62539913799998,0 -67.35657831899995,-53.63073899399996,0 -67.34175611599994,-53.63687898899997,0 -67.33572053762592,-53.64019999999999,0 -67.3352,-53.64019999999999,0 -67.33518829996407,-53.6404928579533,0 -67.32962885999996,-53.64355187899996,0 -67.31615413099996,-53.64995685499998,0 -67.30402687399999,-53.65742809099999,0 -67.29279793299997,-53.66463123899996,0 -67.28291646499999,-53.67209986299996,0 -67.27168752399994,-53.68063380399996,0 -67.26270437099997,-53.68863279699996,0 -67.25911110999994,-53.69049900899996,0 -67.25237374599992,-53.69449775499998,0 -67.24159396199998,-53.70169453599994,0 -67.23485659799996,-53.70569221299996,0 -67.22811923299997,-53.70968950899999,0 -67.21778860699999,-53.71768295699997,0 -67.20790713899997,-53.72567487799995,0 -67.19802567099998,-53.73419791199995,0 -67.18904251799994,-53.74298547299998,0 -67.18095768099994,-53.75150498099999,0 -67.17422031599995,-53.76082120599995,0 -67.16748295099995,-53.77013535499999,0 -67.16209305999995,-53.77918139799994,0 -67.15670316799998,-53.78928936299997,0 -67.15445737999994,-53.79646985199998,0 -67.15221159099995,-53.79992668399996,0 -67.14861832999998,-53.80497846199994,0 -67.14547422699997,-53.81508018299996,0 -67.14547422699997,-53.81640917499993,0 -67.14547422699997,-53.81773812399995,0 -67.13963517699995,-53.82092742999998,0 -67.13738938899996,-53.82225623599998,0 -67.12391465999997,-53.82889962799994,0 -67.111787404,-53.83554196199999,0 -67.09966014699994,-53.84271449399996,0 -67.08708373299999,-53.85015137199998,0 -67.07720226499998,-53.85785245299996,0 -67.06732079699998,-53.86581759099995,0 -67.05699017099992,-53.87457748299994,0 -67.04800701799996,-53.88307016299995,0 -67.04037133899993,-53.89156111099994,0 -67.03363397399994,-53.90084610099996,0 -67.02689660899996,-53.91012901799996,0 -67.02150671799996,-53.91940986299993,0 -67.019260929,-53.92259138999999,0 -67.01566766799992,-53.92921878799996,0 -67.01342187999997,-53.93001400499997,0 -67.00803198799996,-53.93186945199995,0 -66.99320978599997,-53.93637519099997,0 -66.98871820999993,-53.93770031599997,0 -66.98018421499995,-53.94035043799993,0 -66.96670948499997,-53.94300039099995,0 -66.95098896799993,-53.94644507799995,0 -66.93526844999997,-53.95094923599999,0 -66.92089540599994,-53.95571781299997,0 -66.90517488799998,-53.96022096499996,0 -66.89170015899998,-53.96604784899995,0 -66.87732711399997,-53.97213871599995,0 -66.86699648899996,-53.97611053899993,0 -66.84723355199998,-53.98378831799994,0 -66.84049618799996,-53.98590607599994,0 -66.82477566999995,-53.99040595199994,0 -66.81130094099996,-53.99649324199999,0 -66.79692789699995,-54.00231503099998,0 -66.78345316699995,-54.00840057199997,0 -66.77312254199994,-54.01210437699995,0 -66.76009696999996,-54.01739495199996,0 -66.74662224099994,-54.02347827799996,0 -66.73314751099997,-54.02929627499997,0 -66.73259989802189,-54.02961865460274,0 -66.73260000000001,-53.58609999999999,0 -66.97489199687459,-53.590492413743,0 -66.98490283871121,-53.3751986249038,0 -67.55029999999999,-53.36609999999999,0 -67.54989999999999,-53.37960000000002,0 -67.586,-53.37989999999999,0 -67.586,-53.38419999999999,0 -67.60240000000002,-53.38450000000001,0 -67.60190000000001,-53.39979999999999,0 -67.59389999999999,-53.40010000000002,0 -67.5942,-53.4135,0 -67.58649999999999,-53.4138,0 -67.58629999999998,-53.422,0 -67.5337,-53.42150000000002,0 -67.53230000000001,-53.4557,0 -67.5488,-53.4557,0 -67.5485,-53.4677,0 -67.58029999999998,-53.4677,0 -67.5805,-53.4617,0 -67.58965978179749,-53.4617,0 -67.5896,-53.4524,0 -67.60680000000001,-53.4527,0 -67.6065,-53.465,0 -67.59340000000002,-53.4653,0 -67.5926,-53.4987,0 -67.56475978179739,-53.4984,0 -67.56365978179738,-53.5222,0 -67.54710000000001,-53.5222,0 -67.5479,-53.508,0 -67.5217,-53.5074,0 -67.5214,-53.51669999999998,0 -67.50169999999999,-53.51589999999998,0 -67.4992,-53.57939999999999,0 -67.43600000000001,-53.57830000000001,0 -67.43519999999999,-53.5961,0 -67.42799999999998,-53.5961,0 -67.42772064675744,-53.60638019932673,0 -67.42746976834384,-53.60646158311064,0 -67.41766375799995,-53.60964260699997,0 -67.41586712699994,-53.61017682399995,0 -67.40467397436461,-53.61417042347954,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">1</SimpleData>
+					<SimpleData name="NOMBRE">CAN_100</SimpleData>
+					<SimpleData name="Sup">15005.8</SimpleData>
+					<SimpleData name="UTE">YPF S.A. 100%</SimpleData>
+					<SimpleData name="Empresas">YPF</SimpleData>
+					<SimpleData name="Ronda"></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-55.03749255689912,-40.16371860271398,0 -54.46481336649243,-40.15259074465904,0 -54.49037187664658,-39.45341443189857,0 -54.99845759719914,-39.46425417957795,0 -55.04838266660698,-39.46531930527117,0 -55.04450932968246,-39.60345780634003,0 -55.17946426216832,-39.60540781904432,0 -55.59881917747963,-39.61146723011928,0 -55.5883106131762,-40.12602886219344,0 -55.74968280207371,-40.12788379601864,0 -55.7449376012998,-40.3851633683135,0 -56.16261061647862,-40.38897536179378,0 -56.16123316397545,-40.49904208575975,0 -56.15747869256552,-40.79874692060685,0 -56.08143182287029,-40.79811045702156,0 -55.94563312178731,-40.79697390888344,0 -55.942069900339,-41.02089257179778,0 -55.32847379809243,-41.01391424836022,0 -55.32485930933543,-41.15629373874656,0 -55.2013662203865,-41.15445169831174,0 -54.99046031290533,-41.15130579587423,0 -55.00113199509268,-40.92722087534509,0 -55.03749255689912,-40.16371860271398,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">5</SimpleData>
+					<SimpleData name="NOMBRE">AUS_105</SimpleData>
+					<SimpleData name="Sup">2129.11</SimpleData>
+					<SimpleData name="UTE">Equinor 100%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<MultiGeometry>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								-68.0496,-52.80639999999999,0 -68.04969112981018,-52.80640000014569,0 -68.0496,-52.80649112907333,0 -68.0496,-52.80639999999999,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								-67.7698,-53.25889999999999,0 -67.77577134210858,-53.25901058040942,0 -67.77070166499993,-53.26257926699998,0 -67.76970225364754,-53.26339633221315,0 -67.7698,-53.25889999999999,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								-67.7807,-53.2482,0 -67.79288275584963,-53.2482,0 -67.78103228999997,-53.25530725299995,0 -67.78063221211985,-53.25558887893695,0 -67.7807,-53.2482,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								-68.03795046199997,-52.81970256499994,0 -68.03570467299994,-52.82160725999994,0 -68.02537404799996,-52.82922520399996,0 -68.01684005199996,-52.83738579699997,0 -68.00785689999998,-52.84608873099995,0 -68.00426363799994,-52.85016762899995,0 -67.99887374699996,-52.85614931399993,0 -67.99078890899995,-52.86512028999993,0 -67.98315322899998,-52.87381763899999,0 -67.97641586499998,-52.88332835699998,0 -67.96967849999999,-52.89283697899997,0 -67.96428860799995,-52.90207191999996,0 -67.96069534699997,-52.91021875499995,0 -67.95755124399994,-52.91646361899995,0 -67.95395798299995,-52.92433628899994,0 -67.94946640599994,-52.93383587199997,0 -67.94632230299999,-52.94143402899994,0 -67.94497482999998,-52.94333335899994,0 -67.94183072599998,-52.95147239599999,0 -67.93644083399994,-52.96774585199996,0 -67.93284757299993,-52.97642251299994,0 -67.92970346999995,-52.98645271999993,0 -67.92745768199995,-52.99458360199998,0 -67.92719718364339,-52.99536943641154,0 -67.92605484101034,-52.99886222884532,0 -67.92386441999997,-53.00731889199994,0 -67.92386441999997,-53.01001464126477,0 -67.92161863199993,-53.01490407899997,0 -67.92072031699996,-53.01759935026478,0 -67.91879448339238,-53.02091743016005,0 -67.91570050945205,-53.02622906020207,0 -67.91278205420178,-53.03142999509733,0 -67.91277458882226,-53.03144348933975,0 -67.91263547899995,-53.03169508399997,0 -67.911737164,-53.03359042999994,0 -67.90936637418692,-53.038056063126,0 -67.90725166748992,-53.04212565617603,0 -67.83755416201151,-53.04143862466441,0 -67.83755415262459,-53.04143896432159,0 -67.83755197190651,-53.0414389428262,0 -67.8368290900876,-53.06759423533129,0 -67.79660830617848,-53.0671941544107,0 -67.7966082950459,-53.06719455268839,0 -67.79660617043558,-53.06719453155839,0 -67.7941370849247,-53.15552944700081,0 -67.82914154049401,-53.15596631657229,0 -67.82914154858462,-53.1559660091773,0 -67.8291436045446,-53.15596603483869,0 -67.82987687819529,-53.12811080289771,0 -67.8733153898217,-53.12852750036402,0 -67.87266044899997,-53.13581485399993,0 -67.87266044899997,-53.13932617099993,0 -67.87131297599996,-53.14202698699996,0 -67.86906718799999,-53.14661798299994,0 -67.86232982399999,-53.16146782799996,0 -67.86143150799994,-53.16281755799997,0 -67.86008403499994,-53.16686649199993,0 -67.85469414399994,-53.17820146499998,0 -67.85244835499998,-53.18278857499996,0 -67.85155003999995,-53.18494704499994,0 -67.85020256699995,-53.18764497799999,0 -67.84705846399997,-53.19573775499998,0 -67.84121941399997,-53.20517738799998,0 -67.83807531099995,-53.21515415699998,0 -67.83582952299997,-53.22324171599997,0 -67.83223626199997,-53.22458949299993,0 -67.82684636999994,-53.22728491999993,0 -67.82100731999996,-53.23051920699999,0 -67.82010900499995,-53.23132773999998,0 -67.81651574399996,-53.23402274099993,0 -67.81426995599995,-53.23510069299993,0 -67.80438848799996,-53.24049004699999,0 -67.7971753672618,-53.24533604405164,0 -67.7974,-53.2368,0 -67.7645,-53.2363,0 -67.76439999999999,-53.24620000000001,0 -67.7499,-53.24590000000001,0 -67.7499,-53.2533,0 -67.72779999999999,-53.25299999999999,0 -67.72680000000001,-53.2936,0 -67.70890000000001,-53.2936,0 -67.70840000000001,-53.30219999999999,0 -67.67849999999999,-53.30190000000001,0 -67.6784,-53.3091,0 -67.6484,-53.3088,0 -67.648,-53.31330000000001,0 -67.61239999999999,-53.31309999999998,0 -67.61179999999999,-53.32580000000001,0 -67.60130000000001,-53.32530000000001,0 -67.601,-53.33689999999998,0 -67.59039999999999,-53.33689999999998,0 -67.58979999999998,-53.3521,0 -67.5808,-53.352,0 -67.5805,-53.35980000000001,0 -67.57170000000001,-53.35970000000001,0 -67.57170000000001,-53.36639999999999,0 -67.55029999999999,-53.36609999999999,0 -66.98490283871121,-53.3751986249038,0 -66.9956,-53.15329999999999,0 -67.0016,-53.1534,0 -67.0313,-53.1539,0 -67.05534264171621,-53.15426783773731,0 -67.05880000000001,-53.07980000000001,0 -67.1182,-53.08059999999998,0 -67.11789999999999,-53.08859999999999,0 -67.1313,-53.0889,0 -67.1307,-53.10699999999999,0 -67.1470588999281,-53.1072992481694,0 -67.1463,-53.12499999999999,0 -67.13569999999999,-53.12499999999999,0 -67.13509999999999,-53.14279999999999,0 -67.1157,-53.14250000000001,0 -67.11399999999999,-53.17869999999997,0 -67.1825945481872,-53.17965333223551,0 -67.18099999999998,-53.22450000000001,0 -67.2198602564345,-53.2251408834106,0 -67.2188,-53.2484,0 -67.3296,-53.25010000000001,0 -67.3301,-53.23480000000001,0 -67.35879999999999,-53.2351,0 -67.3596,-53.21270000000002,0 -67.376,-53.21280000000001,0 -67.3754,-53.23089999999998,0 -67.42019999999999,-53.23140000000001,0 -67.4213322017648,-53.2028172664652,0 -67.43770000000001,-53.20310000000001,0 -67.43819999999999,-53.18950000000002,0 -67.46071015283179,-53.1898655049006,0 -67.4616,-53.16499999999999,0 -67.48849999999999,-53.16529999999999,0 -67.4896,-53.13,0 -67.4971,-53.13,0 -67.49769999999998,-53.11919999999999,0 -67.5168,-53.1195,0 -67.520334286389,-53.0225693939521,0 -67.53820000000002,-53.02279999999998,0 -67.5385,-53.0136,0 -67.5532,-53.0139,0 -67.55349999999999,-53.0095,0 -67.56850000000001,-53.0098,0 -67.5688,-52.9945,0 -67.50940486468548,-52.99360158618849,0 -67.51009999999998,-52.9684,0 -67.48040000000002,-52.9681,0 -67.48099999999999,-52.95,0 -67.4513,-52.9498,0 -67.4507,-52.9678,0 -67.42100000000001,-52.96729999999999,0 -67.4254,-52.8417,0 -67.44179999999997,-52.8417,0 -67.4424988359951,-52.82460132536939,0 -67.9201977798854,-52.82288180746591,0 -67.9752,-52.82339999999999,0 -67.9752,-52.81700000000001,0 -67.99019999999999,-52.8173,0 -67.99019999999999,-52.8092,0 -68.04678981817206,-52.80948580716251,0 -68.04109456499998,-52.81562079199995,0 -68.03795046199997,-52.81970256499994,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+			</MultiGeometry>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#falseColor1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#S_Ronda_1_SSDSSS">
+					<SimpleData name="id_2">8</SimpleData>
+					<SimpleData name="NOMBRE">CAN_102</SimpleData>
+					<SimpleData name="Sup">8908.94</SimpleData>
+					<SimpleData name="UTE">Equinor 50% - YPF S.A. 50%</SimpleData>
+					<SimpleData name="Empresas">EQUINOR - YPF</SimpleData>
+					<SimpleData name="Ronda">Ronda 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							-53.61055878063913,-37.39454770689543,0 -54.1707972738253,-38.12511395254898,0 -53.23260788388588,-38.56493410918381,0 -52.70374769729239,-37.82515474535501,0 -53.15376451899994,-37.61644521899996,0 -53.56698954999997,-37.41286781899999,0 -53.61055878063913,-37.39454770689543,0 -53.61055878063913,-37.39454770689543,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>
