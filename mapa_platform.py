@@ -6,8 +6,14 @@ from mpl_toolkits.basemap import Basemap
 import pandas as pd
 import numpy as np
 
+from shapely.geometry import MultiPoint
+from matplotlib.patches import Polygon as MplPolygon
+import alphashape
+
+
+
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "zais"               # opciones: 'zais', 'gsj', 'arasj'
+ZONA = "gsj"               # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"           # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
@@ -17,32 +23,6 @@ CARPETA_OUTPUT = "mapas"
 def extraer_frecuencia(nombre_archivo):
     match = re.search(r"f(\d+(\.\d+)?)\s*Hz", nombre_archivo)
     return float(match.group(1)) if match else None
-
-def corregir_tl_column(col):
-    col_corr = []
-    correcciones = 0
-
-    for val in col:
-        try:
-            fval = float(val)
-            if fval <= 2000:
-                col_corr.append(fval)
-                continue
-        except:
-            pass
-
-        val_str = str(val).strip()
-        val_digits = ''.join(filter(str.isdigit, val_str))
-
-        if len(val_digits) >= 4:
-            corrected = float(val_digits[:3] + '.' + val_digits[3:])
-            col_corr.append(corrected)
-            correcciones += 1
-        else:
-            col_corr.append(np.nan)
-
-    return pd.Series(col_corr), correcciones
-
 
 def procesar_archivo(ruta_archivo):
     try:
@@ -56,12 +36,6 @@ def procesar_archivo(ruta_archivo):
             return
 
         df = pd.read_csv(ruta_archivo)
-
-       
-        #df[VAR_TL], cant_corregidas = corregir_tl_column(df[VAR_TL])
-        #print(f"[INFO] {os.path.basename(ruta_archivo)}: {cant_corregidas} valores corregidos en la columna {VAR_TL}")
-
-        #df = df.dropna(subset=[VAR_TL])  # eliminar filas que no pudieron corregirse
 
         columnas_necesarias = {'lat', 'lon', VAR_TL}
         if not columnas_necesarias.issubset(df.columns):
@@ -99,6 +73,43 @@ def procesar_archivo(ruta_archivo):
         m.scatter(np.array(x)[mask_low], np.array(y)[mask_low],
                 color='red', marker='x', s=60, label=f"{VAR_TL} < 210")
 
+        # # === Calcular el polígono convexo que encierra los puntos ===
+        # puntos = list(zip(x, y))
+        # multipoint = MultiPoint(puntos)
+        # if not multipoint.is_empty and len(multipoint.geoms) > 2:
+        #     convex_hull = multipoint.convex_hull
+
+        #     # Asegurar que sea un polígono (puede ser una línea si hay pocos puntos)
+        #     if convex_hull.geom_type == 'Polygon':
+        #         x_hull, y_hull = convex_hull.exterior.xy
+        #         hull_polygon = MplPolygon(
+        #             list(zip(x_hull, y_hull)),
+        #             closed=True,
+        #             fill=False,
+        #             edgecolor='orange',
+        #             linewidth=2,
+        #             label='Área de datos'
+        #         )
+        #         ax.add_patch(hull_polygon)
+
+        # === Calcular el polígono cóncavo (alpha shape) sobre coordenadas geográficas ===
+        geo_points = list(zip(df['lon'], df['lat']))  # Usar lon/lat reales para el alpha shape
+        if len(geo_points) >= 4:
+            alpha_shape = alphashape.alphashape(geo_points, alpha=.5)
+            if alpha_shape.geom_type == 'Polygon':
+                lon_alpha, lat_alpha = alpha_shape.exterior.xy
+                x_alpha, y_alpha = m(lon_alpha, lat_alpha)  # Proyectar los puntos del borde
+                alpha_polygon = MplPolygon(
+                    list(zip(x_alpha, y_alpha)),
+                    closed=True,
+                    fill=False,
+                    edgecolor='blue',
+                    linewidth=2.5,
+                    label='Área de datos'
+                )
+                ax.add_patch(alpha_polygon)
+
+                
         # Leyenda y colorbar
         cbar = m.colorbar(sc, location='right', pad="5%")
         cbar.set_label(f"{VAR_TL} [dB]")
@@ -114,6 +125,8 @@ def procesar_archivo(ruta_archivo):
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
         print(f"[OK] Procesado {nombre_archivo} → {output_path}")
+        
+        
 
     except Exception as e:
         print(f"[ERROR] Al procesar {ruta_archivo}: {e}")
