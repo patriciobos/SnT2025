@@ -5,16 +5,20 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import pandas as pd
 import numpy as np
-from shapely.geometry import MultiPoint, Point
+from shapely.geometry import Polygon, Point
 from matplotlib.patches import Polygon as MplPolygon
 import alphashape
 from scipy.interpolate import griddata
 import geopandas as gpd
+from geopy.distance import geodesic
+import math
+
+import imageio
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "arasj"               # opciones: 'zais', 'gsj', 'arasj'
+ZONA = "gsj"               # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"           # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = None  # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+FRECUENCIA_OBJETIVO = 100.0  # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
@@ -46,6 +50,58 @@ ciudades_argentinas = [
 ]
 
 # ==== FUNCIONES AUXILIARES ====
+
+def crear_anillo_sectorial_exclusion(punto_objetivo, punto_a, punto_b, r_max_km=2000, num_puntos=100):
+    """
+    Crea un polígono en forma de anillo sectorial (slice angular con r_min > 0) desde punto_objetivo
+    entre las direcciones a punto_a y punto_b.
+
+    Retorna shapely.geometry.Polygon con coordenadas (lon, lat)
+    """
+    lat0, lon0 = punto_objetivo
+    lat_a, lon_a = punto_a
+    lat_b, lon_b = punto_b
+
+    # Calcular distancia media (r_min)
+    dist_a = geodesic((lat0, lon0), (lat_a, lon_a)).km
+    dist_b = geodesic((lat0, lon0), (lat_b, lon_b)).km
+    r_min_km = (dist_a + dist_b) / 2
+
+    # Función de rumbo/azimuth
+    def azimuth(lat1, lon1, lat2, lon2):
+        dlon = np.radians(lon2 - lon1)
+        lat1 = np.radians(lat1)
+        lat2 = np.radians(lat2)
+        x = np.sin(dlon) * np.cos(lat2)
+        y = np.cos(lat1)*np.sin(lat2) - np.sin(lat1)*np.cos(lat2)*np.cos(dlon)
+        angle = np.arctan2(x, y)
+        return (np.degrees(angle) + 360) % 360
+
+    # Calcular ángulos
+    ang_a = azimuth(lat0, lon0, lat_a, lon_a)
+    ang_b = azimuth(lat0, lon0, lat_b, lon_b)
+
+    if ang_b < ang_a:
+        ang_b += 360
+
+    angles = np.linspace(ang_a, ang_b, num_puntos)
+
+    coords = []
+
+    # Borde exterior (r_max)
+    for ang in angles:
+        dest = geodesic(kilometers=r_max_km).destination((lat0, lon0), ang)
+        coords.append((dest.longitude, dest.latitude))
+
+    # Borde interior (r_min), en reversa para cerrar el polígono
+    for ang in reversed(angles):
+        dest = geodesic(kilometers=r_min_km).destination((lat0, lon0), ang)
+        coords.append((dest.longitude, dest.latitude))
+
+    return Polygon(coords)
+
+
+
 def extraer_frecuencia(nombre_archivo):
     match = re.search(r"f(\d+(\.\d+)?)\s*Hz", nombre_archivo)
     return float(match.group(1)) if match else None
@@ -143,14 +199,6 @@ def procesar_archivo(ruta_archivo):
 
         all_valid_points = np.vstack([points_in_alpha, points_in_mask])
 
-        # === FILTRAR REGIÓN SIN DATOS (al sur de Malvinas) ===
-        # Excluir puntos: lat < -51 y -63 < lon < -56.5
-        mask_excluir = ~((all_valid_points[:, 1] < -51.2) &
-                        (all_valid_points[:, 0] > -61.5) &
-                        (all_valid_points[:, 0] < -57.5))
-
-        # Aplicar máscara
-        all_valid_points = all_valid_points[mask_excluir]
 
         # === INTERPOLACIÓN ===
         tl_interp = griddata(points=np.c_[df['lon'], df['lat']], values=df[VAR_TL], xi=all_valid_points, method='linear')
@@ -177,10 +225,30 @@ def procesar_archivo(ruta_archivo):
 
         # === GRAFICAR PUNTO DE CÁLCULO ===
         punto_lon, punto_lat, punto_nombre = obtener_punto_zona(ZONA)
+
         if punto_lon is not None:
             x_punto, y_punto = m(punto_lon, punto_lat)
-            m.plot(x_punto, y_punto, 'r*', markersize=10, label=f'Bouy location: {ZONA.upper()}')
+            m.plot(x_punto, y_punto, 'r*', markersize=10, label=f'Buoy location: {ZONA.upper()}')
             #plt.text(x_punto + 10000, y_punto + 5000, punto_nombre, fontsize=8, color='red', weight='bold')
+
+        poligono_exclusion = crear_anillo_sectorial_exclusion(
+            punto_objetivo=(punto_lat, punto_lon),
+            punto_a=(-51.75, -61.53),
+            punto_b=(-51.58, -57.37),
+            r_max_km=2000
+        )
+
+        # === FILTRAR PUNTOS DENTRO DEL SECTOR DE EXCLUSIÓN ===
+        mask_exclusion = np.array([
+            not poligono_exclusion.contains(Point(lon, lat))
+            for lon, lat in all_valid_points
+        ])
+        all_valid_points = all_valid_points[mask_exclusion]
+
+        # === GRAFICAR SECTOR DE EXCLUSIÓN ===
+        if poligono_exclusion is not None:
+            x_sec, y_sec = m(*zip(*poligono_exclusion.exterior.coords))
+            ax.plot(x_sec, y_sec, color='red', linewidth=1.2, linestyle='--')  # sin label
 
         lon_min = np.clip(df['lon'].min(), -70, -50)
         lon_max = np.clip(df['lon'].max(), -70, -50)
@@ -227,7 +295,28 @@ def procesar_archivo(ruta_archivo):
     except Exception as e:
         print(f"[ERROR] Al procesar {ruta_archivo}: {e}")
 
-# ==== MAIN ====
+def crear_gif(carpeta_output, zona, var_tl, duracion=1.0):
+    imagenes = [
+        os.path.join(carpeta_output, f)
+        for f in os.listdir(carpeta_output)
+        if f.endswith(".png") and f.startswith(f"{zona}_f") and var_tl in f
+    ]
+
+    if not imagenes:
+        print("⚠️ No se encontraron imágenes para generar el GIF.")
+        return
+
+    # Ordenar usando tu función existente
+    imagenes.sort(key=lambda f: extraer_frecuencia(os.path.basename(f)) or float('inf'))
+
+    gif_path = os.path.join(carpeta_output, f"{zona}_{var_tl}.gif")
+
+    print(f"🎞️ Generando GIF con {len(imagenes)} imágenes...")
+    frames = [imageio.v2.imread(img) for img in imagenes]
+    imageio.mimsave(gif_path, frames, duration=duracion)
+
+    print(f"✅ GIF generado: {gif_path}")
+
 if __name__ == "__main__":
     archivos = [os.path.join(CARPETA_INPUT, f)
                 for f in os.listdir(CARPETA_INPUT)
@@ -239,3 +328,6 @@ if __name__ == "__main__":
         pool.map(procesar_archivo, archivos)
 
     print("✅ Todos los archivos procesados.")
+
+    # Crear GIF animado con los mapas generados
+    crear_gif(CARPETA_OUTPUT, ZONA, VAR_TL, duracion=1.0)
