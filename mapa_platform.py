@@ -14,7 +14,7 @@ import geopandas as gpd
 # ==== CONFIGURACIÓN DEL USUARIO ====
 ZONA = "arasj"               # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"           # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = 100.0  # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+FRECUENCIA_OBJETIVO = None  # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
@@ -42,7 +42,7 @@ ciudades_argentinas = [
     {"nombre": "Puerto Madryn", "lat": -42.7692, "lon": -65.0385},
     #{"nombre": "Trelew", "lat": -43.2489, "lon": -65.3051},
     {"nombre": "Comodoro Rivadavia", "lat": -45.8647, "lon": -67.4822},
-    #{"nombre": "Río Gallegos", "lat": -51.6230, "lon": -69.2168},
+    {"nombre": "Río Gallegos", "lat": -51.6230, "lon": -69.2168},
 ]
 
 # ==== FUNCIONES AUXILIARES ====
@@ -92,13 +92,28 @@ def procesar_archivo(ruta_archivo):
         m.drawcountries()
         m.drawmapboundary(fill_color='lightblue')
         m.fillcontinents(color='lightgray', lake_color='lightblue')
-        m.drawparallels(np.arange(-90., 0., 2.), labels=[1, 0, 0, 0])
-        m.drawmeridians(np.arange(-70., -50., 2.), labels=[0, 0, 0, 1])
+
+        # Paso uniforme para grid
+        step = 3.0
+
+        # === MERIDIANOS (Longitudes) ===
+        meridianos = np.arange(np.floor(m.llcrnrlon), np.ceil(m.urcrnrlon) + step, step)
+        for i, mer in enumerate(meridianos):
+            label = 1 if i % 2 == 0 else 0  # Etiquetar uno de cada dos
+            m.drawmeridians([mer], labels=[0, 0, 0, label], linewidth=0.5, color='black')
+
+        # === PARALELOS (Latitudes) ===
+        paralelos = np.arange(np.floor(m.llcrnrlat), np.ceil(m.urcrnrlat) + step, step)
+        for i, par in enumerate(paralelos):
+            label = 1 if i % 2 == 0 else 0  # Etiquetar uno de cada dos
+            m.drawparallels([par], labels=[label, 0, 0, 0], linewidth=0.5, color='black')
 
         for ciudad in ciudades_argentinas:
             cx, cy = m(ciudad["lon"], ciudad["lat"])
             m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=8, ha='right', va='bottom')
+            plt.text(cx, cy, ciudad["nombre"],
+                    fontsize=8, ha='right', va='top')
+
 
         # Etiqueta "Argentina"
         plt.text(0.15, 0.9, "Argentina", transform=ax.transAxes,
@@ -128,6 +143,15 @@ def procesar_archivo(ruta_archivo):
 
         all_valid_points = np.vstack([points_in_alpha, points_in_mask])
 
+        # === FILTRAR REGIÓN SIN DATOS (al sur de Malvinas) ===
+        # Excluir puntos: lat < -51 y -63 < lon < -56.5
+        mask_excluir = ~((all_valid_points[:, 1] < -51.2) &
+                        (all_valid_points[:, 0] > -61.5) &
+                        (all_valid_points[:, 0] < -57.5))
+
+        # Aplicar máscara
+        all_valid_points = all_valid_points[mask_excluir]
+
         # === INTERPOLACIÓN ===
         tl_interp = griddata(points=np.c_[df['lon'], df['lat']], values=df[VAR_TL], xi=all_valid_points, method='linear')
         bat_interp = griddata(points=np.c_[df['lon'], df['lat']], values=df['bat'], xi=all_valid_points, method='linear')
@@ -156,7 +180,7 @@ def procesar_archivo(ruta_archivo):
         if punto_lon is not None:
             x_punto, y_punto = m(punto_lon, punto_lat)
             m.plot(x_punto, y_punto, 'r*', markersize=10, label=f'Bouy location: {ZONA.upper()}')
-            plt.text(x_punto + 10000, y_punto + 5000, punto_nombre, fontsize=8, color='red', weight='bold')
+            #plt.text(x_punto + 10000, y_punto + 5000, punto_nombre, fontsize=8, color='red', weight='bold')
 
         lon_min = np.clip(df['lon'].min(), -70, -50)
         lon_max = np.clip(df['lon'].max(), -70, -50)
@@ -165,7 +189,7 @@ def procesar_archivo(ruta_archivo):
 
         # === INLET PLANISFERIO SEGURO ===
         try:
-            ax_inlet = fig.add_axes((0.63, 0.65, 0.18, 0.18))  # Arriba a la derecha
+            ax_inlet = fig.add_axes((0.64, 0.68, 0.18, 0.18))  # Arriba a la derecha
             m_inlet = Basemap(projection='cyl',
                   llcrnrlat=-90,
                   urcrnrlat=90,
