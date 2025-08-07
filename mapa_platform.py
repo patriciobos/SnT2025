@@ -13,9 +13,9 @@ from geopy.distance import geodesic
 import imageio
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "zais"               # opciones: 'zais', 'gsj', 'arasj'
-VAR_TL = "tl_z_8"          # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = 100.0  # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+ZONA = "arasj"               # opciones: 'zais', 'gsj', 'arasj'
+VAR_TL = "tl_z_8"            # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
+FRECUENCIA_OBJETIVO = None   # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
@@ -27,6 +27,7 @@ PARALELO_NORTE = -26
 PARALELO_SUR = -54
 PARALELO_INTERPOLACION = -54
 MERIDIANO_CORTE = -56
+PLOT_EXCLUSION_ARCS = True
 
 # === NUEVO: parámetros del sector ===
 A_LAT, A_LON = -51.75, -61.53   # Punto A
@@ -163,8 +164,8 @@ def procesar_archivo(ruta_archivo):
         alpha_shape = alphashape.alphashape(list(zip(df['lon'], df['lat'])), alpha=ALPHA)
 
         # === MALLA E INTERPOLACIÓN ===
-        lon_grid = np.linspace(df['lon'].min(), df['lon'].max(), 500)
-        lat_grid = np.linspace(PARALELO_INTERPOLACION, PARALELO_NORTE, 500)
+        lon_grid = np.linspace(df['lon'].min(), df['lon'].max(), 300)
+        lat_grid = np.linspace(PARALELO_INTERPOLACION, PARALELO_NORTE, 300)
         lon_mesh, lat_mesh = np.meshgrid(lon_grid, lat_grid)
         grid_points = np.c_[lon_mesh.ravel(), lat_mesh.ravel()]
 
@@ -238,8 +239,8 @@ def procesar_archivo(ruta_archivo):
             x_punto, y_punto = m(punto_lon, punto_lat)
             m.plot(x_punto, y_punto, 'r*', markersize=10, label=f'Buoy location: {ZONA.upper()}')
 
-        # === GRAFICAR SOLO LOS ARCOS DEL SECTOR DE EXCLUSIÓN (ARCO CORTO A-B) ===
-        if (punto_lon is not None) and (punto_lat is not None):
+        # === GRAFICAR ZONA DE EXCLUSIÓN COMPLETA ===
+        if PLOT_EXCLUSION_ARCS and (punto_lon is not None) and (punto_lat is not None):
             ang_a = _azimuth(punto_lat, punto_lon, A_LAT, A_LON)
             ang_b = _azimuth(punto_lat, punto_lon, B_LAT, B_LON)
 
@@ -250,18 +251,29 @@ def procesar_archivo(ruta_archivo):
 
             # Muestreo de ángulos sobre el arco más corto A-B
             center, halfspan = _short_arc_center_span(ang_a, ang_b)
-            # 180 muestras a lo largo del arco
             angles = (center + np.linspace(-halfspan, halfspan, 180)) % 360
 
-            # Arco exterior (R_MAX_KM)
+            # --- Arco exterior ---
             arco_max = [geodesic(kilometers=R_MAX_KM).destination((punto_lat, punto_lon), ang) for ang in angles]
             x_max, y_max = m([d.longitude for d in arco_max], [d.latitude for d in arco_max])
             ax.plot(x_max, y_max, linestyle='--', linewidth=1.2, color='red')
 
-            # Arco interior (r_min_km)
+            # --- Arco interior ---
             arco_min = [geodesic(kilometers=r_min_km).destination((punto_lat, punto_lon), ang) for ang in angles]
             x_min, y_min = m([d.longitude for d in arco_min], [d.latitude for d in arco_min])
             ax.plot(x_min, y_min, linestyle='--', linewidth=1.2, color='red')
+
+            # --- Radio A ---
+            p_a_min = geodesic(kilometers=r_min_km).destination((punto_lat, punto_lon), ang_a)
+            p_a_max = geodesic(kilometers=R_MAX_KM).destination((punto_lat, punto_lon), ang_a)
+            x_ra, y_ra = m([p_a_min.longitude, p_a_max.longitude], [p_a_min.latitude, p_a_max.latitude])
+            ax.plot(x_ra, y_ra, linestyle='--', linewidth=1.2, color='red')
+
+            # --- Radio B ---
+            p_b_min = geodesic(kilometers=r_min_km).destination((punto_lat, punto_lon), ang_b)
+            p_b_max = geodesic(kilometers=R_MAX_KM).destination((punto_lat, punto_lon), ang_b)
+            x_rb, y_rb = m([p_b_min.longitude, p_b_max.longitude], [p_b_min.latitude, p_b_max.latitude])
+            ax.plot(x_rb, y_rb, linestyle='--', linewidth=1.2, color='red')
 
         lon_min = np.clip(df['lon'].min(), -70, -50)
         lon_max = np.clip(df['lon'].max(), -70, -50)
