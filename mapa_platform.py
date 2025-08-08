@@ -11,18 +11,19 @@ from scipy.interpolate import griddata
 import geopandas as gpd
 from geopy.distance import geodesic
 import imageio
+from scipy.interpolate import CloughTocher2DInterpolator
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "arasj"               # opciones: 'zais', 'gsj', 'arasj'
-VAR_TL = "tl_z_8"            # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = None   # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+ZONA = "zais"                     # opciones: 'zais', 'gsj', 'arasj'exit
+VAR_TL = "tl_z_half"              # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
+FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
 UMBRAL_TL_LOW = 50
 ALPHA = 0.1
 MASCARA_SHP = "Capas/plataforma_continental/plataforma_continentalPolygon.shp"
-FILTRO_TL_MIN = 30
+FILTRO_TL_MIN = 1
 PARALELO_NORTE = -26
 PARALELO_SUR = -54
 PARALELO_INTERPOLACION = -54
@@ -303,7 +304,7 @@ def procesar_archivo(ruta_archivo):
         cbar = m.colorbar(sc_interp, location='right', pad="5%")
         cbar.set_label("TL [dB]")
         plt.legend(loc='lower right')
-        plt.title(f"Location: {ZONA.upper()} - TL @ {frecuencia} Hz - Z = 8 m")
+        plt.title(f"Location: {ZONA.upper()} - TL @ {frecuencia} Hz - Z = half")
 
         os.makedirs(CARPETA_OUTPUT, exist_ok=True)
         output_path = os.path.join(CARPETA_OUTPUT, f"{ZONA}_f{frecuencia}Hz_{VAR_TL}.png")
