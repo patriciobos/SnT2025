@@ -4,6 +4,9 @@ import re
 import glob
 from concurrent.futures import ProcessPoolExecutor
 
+import geopandas as gpd
+from shapely.ops import unary_union
+from shapely.geometry import Point
 
 def procesar_archivo(filename):
     import os
@@ -16,10 +19,12 @@ def procesar_archivo(filename):
     from mpl_toolkits.basemap import Basemap
     from scipy.interpolate import griddata
     import alphashape
+    import geopandas as gpd
+    from shapely.ops import unary_union
     from shapely.geometry import Point
 
+    # --- nombres y metadatos ---
     basename = os.path.basename(filename)
-
     match = re.search(r"f([\d.]+)\s*Hz", basename)
     frecuencia_str = f"{match.group(1)} Hz" if match else "Frecuencia desconocida"
     frecuencia_limpia = match.group(1).replace('.', '_') if match else "desconocida"
@@ -28,6 +33,7 @@ def procesar_archivo(filename):
     print(f"Procesando: {basename}")
 
     try:
+        # --- lectura y limpieza de datos ---
         df = pd.read_csv(filename)
         df.columns = df.columns.str.strip().str.lower()
 
@@ -38,30 +44,54 @@ def procesar_archivo(filename):
         df['lon'] = df['lon'].astype(float)
         df['bat'] = -df['bat'].astype(float)
 
-        # Definir el límite de TL
-        TLmax = 210
-
+        # --- filtro de TL ---
+        TLmax = 200
         col_TL = columnas_TL[0]
         df_filtrado = df[df[col_TL] < TLmax].copy()
         lat_f = df_filtrado['lat'].values
         lon_f = df_filtrado['lon'].values
         TL = df_filtrado[col_TL].values
 
+        # --- malla e interpolación ---
         grid_lat = np.linspace(np.min(lat_f), np.max(lat_f), 300)
         grid_lon = np.linspace(np.min(lon_f), np.max(lon_f), 300)
         grid_lon2d, grid_lat2d = np.meshgrid(grid_lon, grid_lat)
         points = np.column_stack((lon_f, lat_f))
         grid_TL = griddata(points, TL, (grid_lon2d, grid_lat2d), method='linear')
 
+        # ---------------------------------------------------------------------
+        # NUEVO: máscara = intersección (alpha shape ∩ plataforma continental)
+        # ---------------------------------------------------------------------
+        # 1) alpha shape de los puntos
         alpha = 3.0
         concave_hull = alphashape.alphashape(points, alpha)
-        mask = np.array([
-            concave_hull.contains(Point(x, y))
-            for x, y in zip(grid_lon2d.ravel(), grid_lat2d.ravel())
-        ])
-        grid_TL_masked = np.full_like(grid_TL, np.nan)
-        grid_TL_masked.ravel()[mask] = grid_TL.ravel()[mask]
 
+        # 2) leer shapefile y unificar geometrías
+        shp_path = "Capas/plataforma_continental/plataforma_continentalPolygon.shp"
+        gdf = gpd.read_file(shp_path)
+
+        # reproyectar a WGS84 si fuera necesario (lon/lat)
+        if gdf.crs is not None and gdf.crs.to_epsg() != 4326:
+            gdf = gdf.to_crs(epsg=4326)
+
+        plataforma_union = unary_union(gdf.geometry)
+
+        # 3) intersección
+        area_intersectada = concave_hull.intersection(plataforma_union)
+
+        # 4) construir máscara sobre la grilla (incluye bordes con covers)
+        flat_lon = grid_lon2d.ravel()
+        flat_lat = grid_lat2d.ravel()
+
+        if area_intersectada.is_empty:
+            grid_TL_masked = np.full_like(grid_TL, np.nan)
+        else:
+            mask = np.array([area_intersectada.covers(Point(x, y)) for x, y in zip(flat_lon, flat_lat)])
+            grid_TL_masked = np.full_like(grid_TL, np.nan)
+            grid_TL_masked.ravel()[mask] = grid_TL.ravel()[mask]
+        # ---------------------------------------------------------------------
+
+        # --- figura y mapa base ---
         fig = plt.figure(figsize=(10, 9))
         ax_main = fig.add_axes((0.1, 0.1, 0.85, 0.85))
         m = Basemap(projection='merc',
@@ -76,13 +106,22 @@ def procesar_archivo(filename):
         m.drawparallels(range(-55, -34, 5), labels=[1, 0, 0, 0])
         m.drawmeridians(range(-70, -44, 5), labels=[0, 0, 0, 1])
 
+        # --- NUEVO: dibujar shapefile en el mapa ---
+        shapefile_base = "Capas/plataforma_continental/plataforma_continentalPolygon"
+        m.readshapefile(shapefile_base, 'plataforma', drawbounds=True, color='gray', linewidth=1.0)
+
+        # --- ploteo de la interpolación ---
         x, y = m(grid_lon2d, grid_lat2d)
-        norm = Normalize(vmin=np.nanmin(grid_TL_masked), vmax=np.nanmax(grid_TL_masked))
-        cmap = colormaps['viridis']
+
+        # Escala fija e invertida
+        norm = Normalize(vmin=50, vmax=200)
+        cmap = colormaps['viridis_r']
+
         im = m.pcolormesh(x, y, grid_TL_masked, cmap=cmap, norm=norm, shading='auto')
         cbar = plt.colorbar(im, ax=ax_main, orientation='vertical', shrink=0.7, pad=0.02)
         cbar.set_label(f"{col_TL} (dB)")
 
+        # --- marcadores de ciudades ---
         ciudades_argentinas = [
             {"nombre": "Mar del Plata", "lat": -38.0023, "lon": -57.5575},
             {"nombre": "Bahía Blanca", "lat": -38.7196, "lon": -62.2724},
@@ -100,7 +139,7 @@ def procesar_archivo(filename):
         plt.text(0.15, 0.9, "Argentina", transform=ax_main.transAxes,
                  fontsize=16, fontweight='bold', color='black',
                  ha='center', va='center', alpha=0.5)
-        
+
         # Coordenadas objetivo
         coordenadas_objetivo = [
             {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ"},
@@ -112,13 +151,8 @@ def procesar_archivo(filename):
             m.plot(px, py, marker='*', color='red', markersize=8, zorder=6)
             plt.text(px + 5000, py + 5000, punto["nombre"], fontsize=9, ha='left', va='bottom', color='red')
 
-        # Rectángulo ZAIS
-        #x1, y1 = m(-57.3333, -38.5833)
-        #x2, y2 = m(-55.55, -38.0)
-        #m.plot([x1, x2, x2, x1, x1], [y1, y1, y2, y2, y1], color='black', linestyle='--', linewidth=1.5)
-
         # Inlet planisferio
-        ax_inlet = fig.add_axes([0.55, 0.1, 0.22, 0.22])
+        ax_inlet = fig.add_axes([0.58, 0.7, 0.22, 0.22])
         m_inlet = Basemap(projection='cyl', resolution='c', ax=ax_inlet)
         m_inlet.drawcoastlines(linewidth=0.5)
         m_inlet.drawcountries(linewidth=0.5)
@@ -132,12 +166,16 @@ def procesar_archivo(filename):
         m_inlet.plot(rect_lons, rect_lats, color='red', linewidth=1.5)
 
         ax_main.set_title(f"Transmission Loss from H10 @{frecuencia_str}", fontsize=14)
+
+        # --- guardar ---
         os.makedirs("figuras", exist_ok=True)
         fig.savefig(f"figuras/{nombre_figura}_basemap.png", dpi=300, bbox_inches='tight')
         plt.close()
         return f"{basename} OK"
+
     except Exception as e:
         return f"{basename} ERROR: {e}"
+
 
 
 if __name__ == "__main__":

@@ -12,10 +12,11 @@ import geopandas as gpd
 from geopy.distance import geodesic
 import imageio
 from scipy.interpolate import CloughTocher2DInterpolator
+from matplotlib.colors import Normalize
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "zais"                     # opciones: 'zais', 'gsj', 'arasj'exit
-VAR_TL = "tl_z_half"              # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
+ZONA = "arasj"                     # opciones: 'zais', 'gsj', 'arasj'exit
+VAR_TL = "tl_z_8"              # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
 FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
@@ -222,8 +223,26 @@ def procesar_archivo(ruta_archivo):
 
         # === GRAFICAR PUNTOS INTERPOLADOS ===
         x_final, y_final = m(final_points[:, 0], final_points[:, 1])
-        sc_interp = m.scatter(x_final, y_final, c=final_tl, cmap='viridis', vmin=UMBRAL_TL_LOW, vmax=UMBRAL_TL_HIGH,
-                              marker='s', s=20, edgecolor='none')
+        #sc_interp = m.scatter(x_final, y_final, c=final_tl, cmap='viridis_r', vmin=UMBRAL_TL_LOW, vmax=UMBRAL_TL_HIGH,
+        #                      marker='s', s=20, edgecolor='none')
+
+        # Colormap invertido explícito + normalización fija
+        cmap_inv = plt.get_cmap('viridis').reversed()
+        norm = Normalize(vmin=UMBRAL_TL_LOW, vmax=UMBRAL_TL_HIGH)
+
+        # === GRAFICAR PUNTOS INTERPOLADOS ===
+        x_final, y_final = m(final_points[:, 0], final_points[:, 1])
+        sc_interp = m.scatter(
+            x_final, y_final,
+            c=final_tl,
+            cmap=cmap_inv,
+            norm=norm,
+            marker='s', s=20, edgecolor='none'
+        )
+
+        # === COLORBAR ===
+        cbar = m.colorbar(sc_interp, location='right', pad="5%")
+        cbar.set_label("TL [dB]")
 
         # === GRAFICAR CONTORNO SHP ===
         for geom in gdf_mascara.geometry:
@@ -304,7 +323,7 @@ def procesar_archivo(ruta_archivo):
         cbar = m.colorbar(sc_interp, location='right', pad="5%")
         cbar.set_label("TL [dB]")
         plt.legend(loc='lower right')
-        plt.title(f"Location: {ZONA.upper()} - TL @ {frecuencia} Hz - Z = half")
+        plt.title(f"Location: {ZONA.upper()} - TL @ {frecuencia} Hz - Z = 8 m.")
 
         os.makedirs(CARPETA_OUTPUT, exist_ok=True)
         output_path = os.path.join(CARPETA_OUTPUT, f"{ZONA}_f{frecuencia}Hz_{VAR_TL}.png")
