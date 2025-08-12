@@ -8,6 +8,11 @@ import geopandas as gpd
 from shapely.ops import unary_union
 from shapely.geometry import Point
 
+import subprocess
+import tempfile
+from pathlib import Path
+from PIL import Image  # pip install pillow
+
 def procesar_archivo(filename):
     import os
     import re
@@ -152,7 +157,7 @@ def procesar_archivo(filename):
             plt.text(px + 5000, py + 5000, punto["nombre"], fontsize=9, ha='left', va='bottom', color='red')
 
         # Inlet planisferio
-        ax_inlet = fig.add_axes([0.58, 0.7, 0.22, 0.22])
+        ax_inlet = fig.add_axes([0.57, 0.065, 0.22, 0.22])
         m_inlet = Basemap(projection='cyl', resolution='c', ax=ax_inlet)
         m_inlet.drawcoastlines(linewidth=0.5)
         m_inlet.drawcountries(linewidth=0.5)
@@ -165,7 +170,7 @@ def procesar_archivo(filename):
         rect_lats = [ll_lat, ll_lat, ur_lat, ur_lat, ll_lat]
         m_inlet.plot(rect_lons, rect_lats, color='red', linewidth=1.5)
 
-        ax_main.set_title(f"Transmission Loss from H10 @{frecuencia_str}", fontsize=14)
+        ax_main.set_title(f"Transmission Loss from H10N @{frecuencia_str}, z = 8 m.", fontsize=14)
 
         # --- guardar ---
         os.makedirs("figuras", exist_ok=True)
@@ -176,7 +181,116 @@ def procesar_archivo(filename):
     except Exception as e:
         return f"{basename} ERROR: {e}"
 
+def extraer_frecuencia_desde_png(nombre: str) -> float | None:
+    """
+    Extrae la frecuencia desde nombres tipo:
+    mapa_tl_z_8_f18_0_basemap.png  ->  18.0
+    mapa_tl_z_8_f8_basemap.png     ->   8.0
+    Devuelve float o None si no matchea.
+    """
+    base = os.path.basename(nombre)
+    m = re.search(r"_f(\d+(?:_\d+)?)", base)  # captura 18_0 o 8
+    if not m:
+        return None
+    freq_txt = m.group(1).replace("_", ".")
+    try:
+        return float(freq_txt)
+    except ValueError:
+        return None
 
+def recolectar_frames_figuras(carpeta="figuras") -> list[str]:
+    """
+    Busca los PNG exportados (mapa_tl_z_8_f*_basemap.png),
+    los ordena por frecuencia numérica ascendente y devuelve la lista.
+    """
+    patrones = [
+        os.path.join(carpeta, "mapa_tl_z_8_f*_basemap.png"),
+        os.path.join(carpeta, "mapa_*_f*_basemap.png"),  # por si cambia el prefijo
+    ]
+    archivos = []
+    for patron in patrones:
+        archivos.extend(glob.glob(patron))
+
+    pares = []
+    for f in archivos:
+        fr = extraer_frecuencia_desde_png(f)
+        if fr is not None:
+            pares.append((fr, f))
+
+    pares.sort(key=lambda t: t[0])  # orden por frecuencia
+    return [f for _, f in pares]
+
+def crear_gif(frames: list[str], salida_gif: str, fps: int = 24, optimizar: bool = True):
+    """
+    Crea un GIF animado con loop infinito (loop=0).
+    """
+    if not frames:
+        raise ValueError("No hay frames para el GIF.")
+
+    imgs = [Image.open(f).convert("RGB") for f in frames]
+    if optimizar:
+        imgs = [im.convert("P", palette=Image.ADAPTIVE, colors=256) for im in imgs]
+
+    dur_ms = int(1000 / fps)
+    imgs[0].save(
+        salida_gif,
+        save_all=True,
+        append_images=imgs[1:],
+        duration=dur_ms,
+        loop=0,          # 0 = infinito
+        disposal=2,
+        optimize=True
+    )
+
+def crear_mp4_con_ffmpeg(frames: list[str], salida_mp4: str, fps: int = 24):
+    """
+    Crea un MP4 compatible (yuv420p, faststart) con una sola pasada.
+    El loop/autoplay se configuran en Impress al insertar el video.
+    Requiere ffmpeg instalado.
+    """
+    if not frames:
+        raise ValueError("No hay frames para el MP4.")
+
+    with tempfile.TemporaryDirectory() as tdir:
+        list_path = Path(tdir) / "list.txt"
+        with open(list_path, "w", encoding="utf-8") as f:
+            for path in frames:
+                f.write(f"file '{os.path.abspath(path)}'\n")
+                f.write(f"duration {1.0/fps:.10f}\n")
+            # ffmpeg ignora la duración del último → repetir último frame sin duración
+            f.write(f"file '{os.path.abspath(frames[-1])}'\n")
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "concat", "-safe", "0", "-i", str(list_path),
+            "-movflags", "faststart",
+            "-pix_fmt", "yuv420p",
+            "-vf", f"scale=trunc(iw/2)*2:trunc(ih/2)*2,fps={fps}",
+            salida_mp4,
+        ]
+        subprocess.run(cmd, check=True)
+
+def crear_animaciones(carpeta_fig="figuras", fps=24):
+    """
+    Junta frames de 'figuras', genera GIF (loop infinito) y MP4 (una pasada).
+    """
+    frames = recolectar_frames_figuras(carpeta_fig)
+    if not frames:
+        print("No se encontraron frames PNG en", carpeta_fig)
+        return None
+
+    os.makedirs(carpeta_fig, exist_ok=True)
+    gif_path = os.path.join(carpeta_fig, "animacion_TL.gif")
+    mp4_path = os.path.join(carpeta_fig, "animacion_TL.mp4")
+
+    print(f"Creando GIF ({len(frames)} frames) → {gif_path}")
+    crear_gif(frames, gif_path, fps=fps, optimizar=True)
+
+    print(f"Creando MP4 (una pasada) → {mp4_path}")
+    crear_mp4_con_ffmpeg(frames, mp4_path, fps=fps)
+
+    print("Listo. En Impress: activar 'Repetir hasta detener' e 'Iniciar automáticamente' si querés loop/autoplay.")
+    return {"gif": gif_path, "mp4": mp4_path, "frames": len(frames)}
 
 if __name__ == "__main__":
     # Crear carpeta de salida si no existe
@@ -190,3 +304,9 @@ if __name__ == "__main__":
     print("\n=== Resultados ===")
     for r in resultados:
         print(r)
+
+    # === Animaciones (GIF + MP4) con los PNG generados ===
+    try:
+        crear_animaciones(carpeta_fig="figuras", fps=24)
+    except Exception as e:
+        print("No se pudieron crear las animaciones:", e)

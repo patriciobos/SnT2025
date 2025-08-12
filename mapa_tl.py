@@ -167,7 +167,7 @@ def procesar_archivo(filename):
             superponer_kml(ax_main, ruta_kml, color='red')
 
 
-        ax_main.set_title(f"Transmission Loss from H10 @{frecuencia_str}", fontsize=14)
+        ax_main.set_title(f"Transmission Loss from H10N @{frecuencia_str}, z = 8 m.", fontsize=14)
         os.makedirs("output-data", exist_ok=True)
         fig.savefig(f"output-data/{nombre_figura}_basemap.png", dpi=300, bbox_inches='tight')
         plt.close()
