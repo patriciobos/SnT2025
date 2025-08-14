@@ -22,7 +22,7 @@ from matplotlib.colors import Normalize
 # ==== CONFIGURACIÓN DEL USUARIO ====
 ZONA = "gsj"                     # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"                 # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+FRECUENCIA_OBJETIVO = 80.0        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
@@ -352,7 +352,7 @@ def procesar_archivo(ruta_archivo):
         cbar = m.colorbar(sc_interp, location='right', pad="5%")
         cbar.set_label("TL [dB]")
         plt.legend(loc='lower right')
-        plt.title(f"Location: {display_zona} - TL @ {frecuencia} Hz - Z = 8 m.")
+        plt.title(f"Location: {display_zona} - TL at {frecuencia} Hz - Z = 8 m.", fontsize=18)
 
 
         os.makedirs(CARPETA_OUTPUT, exist_ok=True)

@@ -170,7 +170,7 @@ def procesar_archivo(filename):
         rect_lats = [ll_lat, ll_lat, ur_lat, ur_lat, ll_lat]
         m_inlet.plot(rect_lons, rect_lats, color='red', linewidth=1.5)
 
-        ax_main.set_title(f"Transmission Loss from H10N @{frecuencia_str}, z = 8 m.", fontsize=14)
+        ax_main.set_title(f"Transmission Loss from H10N f = {frecuencia_str}, Z = 8 m.", fontsize=18)
 
         # --- guardar ---
         os.makedirs("figuras", exist_ok=True)
