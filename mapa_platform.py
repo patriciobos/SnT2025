@@ -22,7 +22,7 @@ from matplotlib.colors import Normalize
 # ==== CONFIGURACIÓN DEL USUARIO ====
 ZONA = "gsj"                     # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"                 # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = 80.0        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+FRECUENCIA_OBJETIVO = None       # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
@@ -35,7 +35,7 @@ PLOT_EXCLUSION_ARCS = True
 # Alias SOLO para mostrar en título y leyenda
 ALIAS_ZONA = {
     "zais": "MDQ",   # si ZONA == 'zais' → mostrar 'MDQ'
-    # podés agregar más, ej: "gsj": "GSJ"
+    "gsj": "CRD"
 }
 
 def nombre_para_mostrar(zona: str) -> str:
@@ -253,15 +253,15 @@ def procesar_archivo(ruta_archivo):
             & ~np.isnan(grid_TL)
         )
 
-        # === PLOTEO (scatter en cuadrícula) con colormap invertido y escala fija ===
-        cmap_inv = plt.get_cmap('viridis').reversed()
+        # === PLOTEO (scatter en cuadrícula) con colormap tipo jet (Matlab) y escala fija ===
+        cmap_jet = plt.get_cmap('jet').reversed()
         norm = Normalize(vmin=UMBRAL_TL_LOW, vmax=UMBRAL_TL_HIGH)
 
         x_plot, y_plot = m(lon_mesh[mask_valid], lat_mesh[mask_valid])
         sc_interp = m.scatter(
             x_plot, y_plot,
             c=grid_TL[mask_valid],
-            cmap=cmap_inv,
+            cmap=cmap_jet,
             norm=norm,
             marker='s', s=20, edgecolor='none'
         )
@@ -295,7 +295,7 @@ def procesar_archivo(ruta_archivo):
         # === PUNTO DE CÁLCULO ===
         if (punto_lon is not None) and (punto_lat is not None):
             x_punto, y_punto = m(punto_lon, punto_lat)
-            m.plot(x_punto, y_punto, 'r*', markersize=10, label=f'Buoy location: {display_zona}')
+            m.plot(x_punto, y_punto, 'kx', markersize=8, markeredgewidth=2, label=f'Buoy location: {display_zona}')
 
 
         # === ARCOS/SECTOR DE EXCLUSIÓN (trazado) ===
@@ -349,8 +349,11 @@ def procesar_archivo(ruta_archivo):
             print(f"[ERROR] Al crear el inlet planisferio: {e}")
 
         # === COLORBAR, LEYENDA, TÍTULO, GUARDADO ===
-        cbar = m.colorbar(sc_interp, location='right', pad="5%")
-        cbar.set_label("TL [dB]")
+        # Reduce el tamaño del colorbar usando shrink
+        cbar = m.colorbar(sc_interp, location='right', pad="5%", shrink=0.7)
+        cbar.set_label("TL [dB]", labelpad=-15, loc='bottom', rotation=0)
+        cbar.ax.xaxis.set_label_position('bottom')
+        cbar.ax.xaxis.set_ticks_position('bottom')
         plt.legend(loc='lower right')
         plt.title(f"Location: {display_zona} - TL at {frecuencia} Hz - Z = 8 m.", fontsize=18)
 

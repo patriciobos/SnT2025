@@ -28,6 +28,22 @@ def procesar_archivo(filename):
     from shapely.ops import unary_union
     from shapely.geometry import Point
 
+    # --- figura y mapa base ---
+    fig = plt.figure(figsize=(10, 9))
+    ax_main = fig.add_axes((0.1, 0.1, 0.85, 0.85))
+    m = Basemap(projection='merc',
+                llcrnrlat=-55, urcrnrlat=-35,
+                llcrnrlon=-70, urcrnrlon=-45,
+                resolution='i', ax=ax_main)
+
+    m.drawcoastlines()
+    m.drawcountries()
+    m.drawmapboundary(fill_color='lightblue')
+    m.fillcontinents(color='lightgray', lake_color='lightblue')
+    m.drawparallels(range(-55, -34, 5), labels=[1, 0, 0, 0])
+    m.drawmeridians(range(-70, -44, 5), labels=[0, 0, 0, 1])
+
+    
     # --- nombres y metadatos ---
     basename = os.path.basename(filename)
     match = re.search(r"f([\d.]+)\s*Hz", basename)
@@ -95,6 +111,108 @@ def procesar_archivo(filename):
             grid_TL_masked = np.full_like(grid_TL, np.nan)
             grid_TL_masked.ravel()[mask] = grid_TL.ravel()[mask]
         # ---------------------------------------------------------------------
+        # --- TALUD robusto sin Fiona: usar pyogrio si está, 3D->2D, reproyectar a WGS84, clip y dibujar ---
+        try:
+            from shapely import wkb
+            from shapely.ops import transform
+            from shapely.geometry import box
+            import geopandas as gpd
+
+            read_kwargs = {}
+            try:
+                import pyogrio  # si existe, la usamos como engine
+                read_kwargs["engine"] = "pyogrio"
+                print("TALUD: usando engine=pyogrio")
+            except Exception:
+                print("TALUD: pyogrio no disponible; GeoPandas intentará su engine por defecto (requiere Fiona).")
+
+            def to_2d(geom):
+                if geom is None or geom.is_empty:
+                    return geom
+                try:
+                    return wkb.loads(wkb.dumps(geom, output_dimension=2))
+                except Exception:
+                    return transform(lambda x, y, z=None: (x, y), geom)
+
+            talud_path = "Capas/talud/talud.shp"
+            gdf_talud = gpd.read_file(talud_path, **read_kwargs)
+
+            print("TALUD: CRS leído:", gdf_talud.crs)
+            print("TALUD: bounds originales:", gdf_talud.total_bounds)
+
+            # Forzar 2D
+            gdf_talud["geometry"] = gdf_talud.geometry.apply(to_2d)
+
+            # A WGS84 si hace falta (si no tiene CRS pero las coords parecen lon/lat, lo asumimos)
+            if gdf_talud.crs is None:
+                minx, miny, maxx, maxy = gdf_talud.total_bounds
+                if (abs(minx) > 180 or abs(maxx) > 180 or abs(miny) > 90 or abs(maxy) > 90):
+                    print("TALUD: WARNING → Sin CRS y coords no parecen lon/lat. Asigná el CRS correcto del talud.")
+                else:
+                    print("TALUD: Sin CRS pero coords parecen lon/lat; asumo EPSG:4326.")
+                    gdf_talud = gdf_talud.set_crs(epsg=4326, allow_override=True)
+
+            if gdf_talud.crs is not None and gdf_talud.crs.to_epsg() != 4326:
+                gdf_talud = gdf_talud.to_crs(epsg=4326)
+
+            print("TALUD: bounds en WGS84:", gdf_talud.total_bounds)
+
+            # Clip a la ventana del mapa
+            ll_lon, ll_lat = -70, -55
+            ur_lon, ur_lat = -45, -35
+            bbox_wgs84 = box(ll_lon, ll_lat, ur_lon, ur_lat)
+            gdf_talud_clip = gpd.overlay(
+                gdf_talud,
+                gpd.GeoDataFrame(geometry=[bbox_wgs84], crs="EPSG:4326"),
+                how="intersection",
+                keep_geom_type=True
+            )
+            print(f"TALUD: features antes={len(gdf_talud)}, después del clip={len(gdf_talud_clip)}")
+
+            # Dibujo por encima del raster
+            def _plot_coords(coords):
+                if not coords:
+                    return
+                lons, lats = zip(*coords)
+                xx, yy = m(lons, lats)
+                m.plot(xx, yy, '-', linewidth=2.0, color='purple', zorder=20)
+
+            for geom in gdf_talud_clip.geometry:
+                if geom is None or geom.is_empty:
+                    continue
+                gt = geom.geom_type
+                if gt == 'LineString':
+                    _plot_coords(list(geom.coords))
+                elif gt == 'MultiLineString':
+                    for part in geom.geoms:
+                        _plot_coords(list(part.coords))
+                elif gt == 'Polygon':
+                    _plot_coords(list(geom.exterior.coords))
+                    for ring in geom.interiors:
+                        _plot_coords(list(ring.coords))
+                elif gt == 'MultiPolygon':
+                    for poly in geom.geoms:
+                        _plot_coords(list(poly.exterior.coords))
+                        for ring in poly.interiors:
+                            _plot_coords(list(ring.coords))
+
+            # leyenda opcional
+            from matplotlib.lines import Line2D
+            handle_talud = Line2D([0], [0], color='purple', lw=2.0, label='Talud')
+            leg = ax_main.get_legend()
+            if leg:
+                handles = leg.legendHandles + [handle_talud]
+                labels = [t.get_text() for t in leg.texts] + ['Talud']
+                leg.remove()
+                ax_main.legend(handles, labels, loc='lower left', frameon=True)
+            else:
+                ax_main.legend(handles=[handle_talud], loc='lower left', frameon=True)
+
+        except Exception as e:
+            print(f"Advertencia: no se pudo dibujar el talud (lectura/CRS/clip/plot): {e}")
+
+
+
 
         # --- figura y mapa base ---
         fig = plt.figure(figsize=(10, 9))
@@ -120,11 +238,16 @@ def procesar_archivo(filename):
 
         # Escala fija e invertida
         norm = Normalize(vmin=50, vmax=200)
-        cmap = colormaps['viridis_r']
+        cmap = colormaps['jet_r']
 
         im = m.pcolormesh(x, y, grid_TL_masked, cmap=cmap, norm=norm, shading='auto')
-        cbar = plt.colorbar(im, ax=ax_main, orientation='vertical', shrink=0.7, pad=0.02)
-        cbar.set_label(f"{col_TL} (dB)")
+        # === COLORBAR, LEYENDA, TÍTULO, GUARDADO ===
+        # Reduce el tamaño del colorbar usando shrink
+        cbar = m.colorbar(im, location='right', pad="5%", shrink=0.7)
+        cbar.set_label("TL [dB]", labelpad=-15, loc='bottom', rotation=0)
+        cbar.ax.xaxis.set_label_position('bottom')
+        cbar.ax.xaxis.set_ticks_position('bottom')
+
 
         # --- marcadores de ciudades ---
         ciudades_argentinas = [
@@ -147,14 +270,19 @@ def procesar_archivo(filename):
 
         # Coordenadas objetivo
         coordenadas_objetivo = [
-            {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ"},
-            {"lat": -44.9512, "lon": -63.8894, "nombre": "GSJ"},
-            {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ"},  
+            {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ", "color": "red"},
+            {"lat": -44.9512, "lon": -63.8894, "nombre": "CRD", "color": "green"},
+            {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ", "color": "orange"},  
         ]
         for punto in coordenadas_objetivo:
             px, py = m(punto["lon"], punto["lat"])
             m.plot(px, py, marker='*', color='red', markersize=8, zorder=6)
-            plt.text(px + 5000, py + 5000, punto["nombre"], fontsize=9, ha='left', va='bottom', color='red')
+            plt.text(
+                px + 5000, py + 5000, punto["nombre"],
+                fontsize=16, ha='left', va='bottom',
+                color=punto["color"], fontweight='bold',
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+            )
 
         # Inlet planisferio
         ax_inlet = fig.add_axes([0.57, 0.065, 0.22, 0.22])
@@ -305,8 +433,8 @@ if __name__ == "__main__":
     for r in resultados:
         print(r)
 
-    # === Animaciones (GIF + MP4) con los PNG generados ===
-    try:
-        crear_animaciones(carpeta_fig="figuras", fps=24)
-    except Exception as e:
-        print("No se pudieron crear las animaciones:", e)
+    # # === Animaciones (GIF + MP4) con los PNG generados ===
+    # try:
+    #     crear_animaciones(carpeta_fig="figuras", fps=24)
+    # except Exception as e:
+    #     print("No se pudieron crear las animaciones:", e)

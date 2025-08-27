@@ -112,33 +112,43 @@ def procesar_archivo(filename):
         im = m.pcolormesh(x, y, grid_TL_masked, cmap=cmap, norm=norm, shading='auto')
         cbar = plt.colorbar(im, ax=ax_main, orientation='vertical', shrink=0.7, pad=0.02)
         cbar.set_label(f"{col_TL} (dB)")
+        
+        #shapefile_base_talud = "Capas/talud/talud"
+        #m.readshapefile(shapefile_base_talud, 'Slope', drawbounds=True, color='gray', linewidth=1.0)
+
+        im = m.pcolormesh(x, y, grid_TL_masked, cmap=cmap, norm=norm, shading='auto', zorder=1)
+
+        # Talud arriba
+        dibujar_vector_2d_en_basemap(m, "Capas/talud/talud.shp", layer_color="blue", lw=1.4, zorder=12, alpha=0.9)
+        # o si seguís con KML/KMZ:
+        # dibujar_vector_2d_en_basemap(m, "Capas/Talud/talud_200m.kml", layer_color="magenta", lw=1.6, zorder=12)
 
         ciudades_argentinas = [
             {"nombre": "Mar del Plata", "lat": -38.0023, "lon": -57.5575},
             {"nombre": "Bahía Blanca", "lat": -38.7196, "lon": -62.2724},
             {"nombre": "Puerto Madryn", "lat": -42.7692, "lon": -65.0385},
             {"nombre": "Trelew", "lat": -43.2489, "lon": -65.3051},
-            {"nombre": "Comodoro Rivadavia", "lat": -45.8647, "lon": -67.4822},
-            {"nombre": "Río Gallegos", "lat": -51.6230, "lon": -69.2168},
+            {"nombre": "Comodoro\nRivadavia", "lat": -45.8647, "lon": -67.4822},
+            #{"nombre": "Río \nGallegos", "lat": -51.6230, "lon": -69.2168},
         ]
         for ciudad in ciudades_argentinas:
             cx, cy = m(ciudad["lon"], ciudad["lat"])
             m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=8, ha='center', va='bottom')
+            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=14, ha='right', va='top')
 
         plt.text(0.15, 0.9, "Argentina", transform=ax_main.transAxes,
-                 fontsize=16, fontweight='bold', color='black',
+                 fontsize=18, fontweight='bold', color='black',
                  ha='center', va='center', alpha=0.5)
 
         coordenadas_objetivo = [
-            {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ"},
-            {"lat": -44.9512, "lon": -63.8894, "nombre": "CRD"},
-            {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ"},
+            {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ", "color":"red"},
+            {"lat": -44.9512, "lon": -63.8894, "nombre": "CRD", "color":"green"},
+            {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ", "color":"orange"},
         ]
         for punto in coordenadas_objetivo:
             px, py = m(punto["lon"], punto["lat"])
-            m.plot(px, py, marker='*', color='red', markersize=8, zorder=6)
-            plt.text(px + 5000, py + 5000, punto["nombre"], fontsize=9, ha='left', va='bottom', color='red')
+            m.plot(px, py, marker='*', color=punto["color"], markersize=8, zorder=6)
+            plt.text(px + 5000, py + 5000, punto["nombre"], fontsize=14, ha='left', va='bottom', color=punto["color"], fontweight="bold")
 
         ax_inlet = fig.add_axes([0.57, 0.065, 0.22, 0.22])
         m_inlet = Basemap(projection='cyl', resolution='c', ax=ax_inlet)
@@ -150,10 +160,11 @@ def procesar_archivo(filename):
         rect_lats = [-55, -55, -35, -35, -55]
         m_inlet.plot(rect_lons, rect_lats, color='red', linewidth=1.5)
 
-        ax_main.set_title(f"Transmission Loss from H10N f = {frecuencia_str}, Z = 8 m.", fontsize=18)
+        ax_main.set_title(f"Transmission Loss from H10N f = {frecuencia_str}, Z = 8 m.", fontsize=20)
 
         os.makedirs("figuras", exist_ok=True)
         fig.savefig(f"figuras/{nombre_figura}_basemap.png", dpi=300, bbox_inches='tight')
+        
         plt.close(fig)
 
         return f"{basename} OK (mapas guardados)"
@@ -211,6 +222,64 @@ def crear_gif(frames: list[str], salida_gif: str, fps: int = 24, optimizar: bool
         disposal=2,
         optimize=True
     )
+def _to2d(geom):
+    # Quita Z/M de cualquier geometría usando transform
+    from shapely.ops import transform
+    return transform(lambda x, y, z=None: (x, y), geom)
+
+def _geom_to_lines(geom):
+    from shapely.geometry import LineString, MultiLineString, Polygon, MultiPolygon, LinearRing, GeometryCollection
+    if geom is None or geom.is_empty:
+        return []
+    if isinstance(geom, LineString):
+        return [geom]
+    if isinstance(geom, MultiLineString):
+        return list(geom.geoms)
+    if isinstance(geom, Polygon):
+        segs = []
+        if geom.exterior:
+            segs.append(LineString(geom.exterior.coords))
+        # agujeros opcionales:
+        # for r in geom.interiors: segs.append(LineString(r.coords))
+        return segs
+    if isinstance(geom, MultiPolygon):
+        segs = []
+        for p in geom.geoms:
+            segs.extend(_geom_to_lines(p))
+        return segs
+    if isinstance(geom, LinearRing):
+        return [LineString(list(geom.coords))]
+    if isinstance(geom, GeometryCollection):
+        segs = []
+        for g in geom.geoms:
+            segs.extend(_geom_to_lines(g))
+        return segs
+    return []
+
+def dibujar_vector_2d_en_basemap(m, path, layer_color="black", lw=1.4, zorder=12, alpha=1.0):
+    import geopandas as gpd
+    # Leer SHP/KML/KMZ (GeoPandas detecta por extensión; para KML puede requerir driver="KML")
+    try:
+        if path.lower().endswith(".kml"):
+            gdf = gpd.read_file(path, driver="KML")
+        else:
+            gdf = gpd.read_file(path)
+    except Exception as e:
+        raise RuntimeError(f"No pude leer {path}: {e}")
+
+    # Asegurar CRS WGS84 y forzar 2D
+    if gdf.crs is None:
+        gdf = gdf.set_crs(epsg=4326, allow_override=True)
+    elif gdf.crs.to_epsg() != 4326:
+        gdf = gdf.to_crs(epsg=4326)
+    gdf["geometry"] = gdf.geometry.apply(_to2d)
+
+    # Dibujar contornos en el Basemap
+    for geom in gdf.geometry:
+        for line in _geom_to_lines(geom):
+            lons, lats = line.xy
+            x, y = m(lons, lats)
+            m.plot(x, y, color=layer_color, linewidth=lw, alpha=alpha, zorder=zorder)
 
 
 def crear_mp4_con_ffmpeg(frames: list[str], salida_mp4: str, fps: int = 24):
@@ -281,15 +350,15 @@ def crear_mapa_datapoints_desde_csv(csv_path: str, salida: str = "figuras/mapa_d
         {"nombre": "Bahía Blanca", "lat": -38.7196, "lon": -62.2724},
         {"nombre": "Puerto Madryn", "lat": -42.7692, "lon": -65.0385},
         {"nombre": "Trelew", "lat": -43.2489, "lon": -65.3051},
-        {"nombre": "Comodoro Rivadavia", "lat": -45.8647, "lon": -67.4822},
-        {"nombre": "Río Gallegos", "lat": -51.6230, "lon": -69.2168},
+        {"nombre": "Comodoro \nRivadavia", "lat": -45.8647, "lon": -67.4822},
+        #{"nombre": "Río Gallegos", "lat": -51.6230, "lon": -69.2168},
     ]
     for c in ciudades_argentinas:
         cx, cy = m(c['lon'], c['lat'])
         m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-        plt.text(cx + 5000, cy + 5000, c['nombre'], fontsize=8, ha='right', va='bottom')
+        plt.text(cx + 5000, cy + 5000, c['nombre'], fontsize=14, ha='right', va='top')
 
-    plt.text(0.15, 0.9, "Argentina", transform=ax.transAxes, fontsize=16, fontweight='bold', color='black',
+    plt.text(0.15, 0.9, "Argentina", transform=ax.transAxes, fontsize=18, fontweight='bold', color='black',
              ha='center', va='center', alpha=0.5)
 
     ax_inlet = fig.add_axes([0.62, 0.065, 0.22, 0.22])
@@ -299,7 +368,7 @@ def crear_mapa_datapoints_desde_csv(csv_path: str, salida: str = "figuras/mapa_d
     rect_lons = [-70, -45, -45, -70, -70]; rect_lats = [-55, -55, -35, -35, -55]
     m_inlet.plot(rect_lons, rect_lats, color='red', linewidth=1.5)
 
-    ax.set_title("N geodesic radial lines from H10N for TL modeling", fontsize=18)
+    ax.set_title("N geodesic radial lines from H10N for TL modeling", fontsize=20)
     ax.legend(loc='upper right')
 
     os.makedirs(os.path.dirname(salida), exist_ok=True)
@@ -324,13 +393,26 @@ if __name__ == "__main__":
         print(r)
 
     # ÚNICO mapa de Data points (ubicaciones iguales)
-    try:
-        if archivos_csv:
-            out_png = crear_mapa_datapoints_desde_csv(archivos_csv[0], salida="figuras/mapa_datapoints_unico.png")
-            print("Mapa de Data points:", out_png)
-        else:
-            print("No hay CSVs para crear el mapa de Data points.")
-    except Exception as e:
-        print("No se pudo crear el mapa de Data points:", e)
+    # try:
+    #     if archivos_csv:
+    #         out_png = crear_mapa_datapoints_desde_csv(archivos_csv[0], salida="figuras/mapa_datapoints_unico.png")
+    #         print("Mapa de Data points:", out_png)
+    #     else:
+    #         print("No hay CSVs para crear el mapa de Data points.")
+    # except Exception as e:
+    #     print("No se pudo crear el mapa de Data points:", e)
 
+    # ÚNICO mapa de Data points usando input-data/aeth.csv
+    try:
+        asth_path = os.path.join("input-data", "asth.csv")
+        if os.path.isfile(asth_path):
+            out_png = crear_mapa_datapoints_desde_csv(
+                asth_path,
+                salida="figuras/mapa_datapoints_asth.png"
+            )
+            print("Mapa de Data points (ASTH):", out_png)
+        else:
+            print(f"No se encontró {asth_path}. Verificá el nombre y la carpeta.")
+    except Exception as e:
+        print("No se pudo crear el mapa de Data points (ASTH):", e)
 
