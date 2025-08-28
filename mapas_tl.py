@@ -14,6 +14,7 @@ from pathlib import Path
 from PIL import Image  # pip install pillow
 
 def procesar_archivo(filename):
+    from matplotlib.lines import Line2D
     import os
     import re
     import numpy as np
@@ -111,109 +112,7 @@ def procesar_archivo(filename):
             grid_TL_masked = np.full_like(grid_TL, np.nan)
             grid_TL_masked.ravel()[mask] = grid_TL.ravel()[mask]
         # ---------------------------------------------------------------------
-        # --- TALUD robusto sin Fiona: usar pyogrio si está, 3D->2D, reproyectar a WGS84, clip y dibujar ---
-        try:
-            from shapely import wkb
-            from shapely.ops import transform
-            from shapely.geometry import box
-            import geopandas as gpd
-
-            read_kwargs = {}
-            try:
-                import pyogrio  # si existe, la usamos como engine
-                read_kwargs["engine"] = "pyogrio"
-                print("TALUD: usando engine=pyogrio")
-            except Exception:
-                print("TALUD: pyogrio no disponible; GeoPandas intentará su engine por defecto (requiere Fiona).")
-
-            def to_2d(geom):
-                if geom is None or geom.is_empty:
-                    return geom
-                try:
-                    return wkb.loads(wkb.dumps(geom, output_dimension=2))
-                except Exception:
-                    return transform(lambda x, y, z=None: (x, y), geom)
-
-            talud_path = "Capas/talud/talud.shp"
-            gdf_talud = gpd.read_file(talud_path, **read_kwargs)
-
-            print("TALUD: CRS leído:", gdf_talud.crs)
-            print("TALUD: bounds originales:", gdf_talud.total_bounds)
-
-            # Forzar 2D
-            gdf_talud["geometry"] = gdf_talud.geometry.apply(to_2d)
-
-            # A WGS84 si hace falta (si no tiene CRS pero las coords parecen lon/lat, lo asumimos)
-            if gdf_talud.crs is None:
-                minx, miny, maxx, maxy = gdf_talud.total_bounds
-                if (abs(minx) > 180 or abs(maxx) > 180 or abs(miny) > 90 or abs(maxy) > 90):
-                    print("TALUD: WARNING → Sin CRS y coords no parecen lon/lat. Asigná el CRS correcto del talud.")
-                else:
-                    print("TALUD: Sin CRS pero coords parecen lon/lat; asumo EPSG:4326.")
-                    gdf_talud = gdf_talud.set_crs(epsg=4326, allow_override=True)
-
-            if gdf_talud.crs is not None and gdf_talud.crs.to_epsg() != 4326:
-                gdf_talud = gdf_talud.to_crs(epsg=4326)
-
-            print("TALUD: bounds en WGS84:", gdf_talud.total_bounds)
-
-            # Clip a la ventana del mapa
-            ll_lon, ll_lat = -70, -55
-            ur_lon, ur_lat = -45, -35
-            bbox_wgs84 = box(ll_lon, ll_lat, ur_lon, ur_lat)
-            gdf_talud_clip = gpd.overlay(
-                gdf_talud,
-                gpd.GeoDataFrame(geometry=[bbox_wgs84], crs="EPSG:4326"),
-                how="intersection",
-                keep_geom_type=True
-            )
-            print(f"TALUD: features antes={len(gdf_talud)}, después del clip={len(gdf_talud_clip)}")
-
-            # Dibujo por encima del raster
-            def _plot_coords(coords):
-                if not coords:
-                    return
-                lons, lats = zip(*coords)
-                xx, yy = m(lons, lats)
-                m.plot(xx, yy, '-', linewidth=2.0, color='purple', zorder=20)
-
-            for geom in gdf_talud_clip.geometry:
-                if geom is None or geom.is_empty:
-                    continue
-                gt = geom.geom_type
-                if gt == 'LineString':
-                    _plot_coords(list(geom.coords))
-                elif gt == 'MultiLineString':
-                    for part in geom.geoms:
-                        _plot_coords(list(part.coords))
-                elif gt == 'Polygon':
-                    _plot_coords(list(geom.exterior.coords))
-                    for ring in geom.interiors:
-                        _plot_coords(list(ring.coords))
-                elif gt == 'MultiPolygon':
-                    for poly in geom.geoms:
-                        _plot_coords(list(poly.exterior.coords))
-                        for ring in poly.interiors:
-                            _plot_coords(list(ring.coords))
-
-            # leyenda opcional
-            from matplotlib.lines import Line2D
-            handle_talud = Line2D([0], [0], color='purple', lw=2.0, label='Talud')
-            leg = ax_main.get_legend()
-            if leg:
-                handles = leg.legendHandles + [handle_talud]
-                labels = [t.get_text() for t in leg.texts] + ['Talud']
-                leg.remove()
-                ax_main.legend(handles, labels, loc='lower left', frameon=True)
-            else:
-                ax_main.legend(handles=[handle_talud], loc='lower left', frameon=True)
-
-        except Exception as e:
-            print(f"Advertencia: no se pudo dibujar el talud (lectura/CRS/clip/plot): {e}")
-
-
-
-
+        
         # --- figura y mapa base ---
         fig = plt.figure(figsize=(10, 9))
         ax_main = fig.add_axes((0.1, 0.1, 0.85, 0.85))
@@ -244,7 +143,7 @@ def procesar_archivo(filename):
         # === COLORBAR, LEYENDA, TÍTULO, GUARDADO ===
         # Reduce el tamaño del colorbar usando shrink
         cbar = m.colorbar(im, location='right', pad="5%", shrink=0.7)
-        cbar.set_label("TL [dB]", labelpad=-15, loc='bottom', rotation=0)
+        cbar.set_label("TL(dB)", labelpad=-15, loc='bottom', rotation=0, fontsize=16)
         cbar.ax.xaxis.set_label_position('bottom')
         cbar.ax.xaxis.set_ticks_position('bottom')
 
@@ -261,7 +160,9 @@ def procesar_archivo(filename):
         for ciudad in ciudades_argentinas:
             cx, cy = m(ciudad["lon"], ciudad["lat"])
             m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=8, ha='center', va='bottom')
+            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=8, ha='center', va='bottom',
+                     bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+                     )
 
         # Etiqueta "Argentina"
         plt.text(0.15, 0.9, "Argentina", transform=ax_main.transAxes,
@@ -270,19 +171,37 @@ def procesar_archivo(filename):
 
         # Coordenadas objetivo
         coordenadas_objetivo = [
-            {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ", "color": "red"},
-            {"lat": -44.9512, "lon": -63.8894, "nombre": "CRD", "color": "green"},
-            {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ", "color": "orange"},  
+            {"lat": -38.5092, "lon": -56.4850, "nombre": "MDQ", "color": "red", "ha": "right", "marker": "o"},
+            {"lat": -44.9512, "lon": -63.8894, "nombre": "CRD", "color": "#39FF14", "ha": "left", "marker": "^"},  # verde flúo
+            {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ", "color": "orange", "ha": "left", "marker": "s"},  
         ]
+
+        # Agregar handles para la leyenda de los puntos objetivo
+        handles_objetivo = [
+            Line2D([0], [0], marker=p["marker"], color='w', markerfacecolor=p["color"],
+               markeredgecolor='black', markeredgewidth=2, markersize=12, linestyle='None', label=p["nombre"])
+            for p in coordenadas_objetivo
+        ]
+        # Para configurar el tamaño de la fuente de la leyenda:
+        # Al llamar a ax_main.legend, agrega el argumento fontsize:
+        # ax_main.legend(handles=handles_combinados, labels=labels_combinados, loc='upper right', frameon=True, fontsize=12)
         for punto in coordenadas_objetivo:
             px, py = m(punto["lon"], punto["lat"])
-            m.plot(px, py, marker='*', color='red', markersize=8, zorder=6)
-            plt.text(
-                px + 5000, py + 5000, punto["nombre"],
-                fontsize=16, ha='left', va='bottom',
-                color=punto["color"], fontweight='bold',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+            m.plot(
+                px, py,
+                marker=punto["marker"],
+                color=punto["color"],
+                markeredgecolor='black',
+                markeredgewidth=2,  # <-- más grueso
+                markersize=10,
+                zorder=6
             )
+        # --- leyenda combinada: puntos objetivo + talud ---
+        from matplotlib.lines import Line2D
+        handle_talud = Line2D([0], [0], color='black', lw=2.0, label='Continental slope')
+        handles_combinados = handles_objetivo + [handle_talud]
+        labels_combinados = [h.get_label() for h in handles_combinados]
+        ax_main.legend(handles=handles_combinados, fontsize=12, fontweight='bold', labels=labels_combinados, loc='upper right', frameon=True)
 
         # Inlet planisferio
         ax_inlet = fig.add_axes([0.57, 0.065, 0.22, 0.22])
@@ -298,7 +217,100 @@ def procesar_archivo(filename):
         rect_lats = [ll_lat, ll_lat, ur_lat, ur_lat, ll_lat]
         m_inlet.plot(rect_lons, rect_lats, color='red', linewidth=1.5)
 
-        ax_main.set_title(f"Transmission Loss from H10N f = {frecuencia_str}, Z = 8 m.", fontsize=18)
+        ax_main.set_title(f"Transmission Loss from H10N f = {frecuencia_str}, z = 8 m.", fontsize=18)
+
+        # --- TALUD robusto sin Fiona: usar pyogrio si está, 3D->2D, reproyectar a WGS84, clip y dibujar ---
+        try:
+            from shapely import wkb
+            from shapely.ops import transform
+            from shapely.geometry import box
+            import geopandas as gpd
+
+            read_kwargs = {}
+            try:
+                import pyogrio  # si existe, la usamos como engine
+                read_kwargs["engine"] = "pyogrio"
+                #print("TALUD: usando engine=pyogrio")
+            except Exception:
+                print("TALUD: pyogrio no disponible; GeoPandas intentará su engine por defecto (requiere Fiona).")
+
+            def to_2d(geom):
+                if geom is None or geom.is_empty:
+                    return geom
+                try:
+                    return wkb.loads(wkb.dumps(geom, output_dimension=2))
+                except Exception:
+                    return transform(lambda x, y, z=None: (x, y), geom)
+
+            talud_path = "Capas/talud/talud.shp"
+            gdf_talud = gpd.read_file(talud_path, **read_kwargs)
+
+            #print("TALUD: CRS leído:", gdf_talud.crs)
+            #print("TALUD: bounds originales:", gdf_talud.total_bounds)
+
+            # Forzar 2D
+            gdf_talud["geometry"] = gdf_talud.geometry.apply(to_2d)
+
+            # A WGS84 si hace falta (si no tiene CRS pero las coords parecen lon/lat, lo asumimos)
+            if gdf_talud.crs is None:
+                minx, miny, maxx, maxy = gdf_talud.total_bounds
+                if (abs(minx) > 180 or abs(maxx) > 180 or abs(miny) > 90 or abs(maxy) > 90):
+                    print("TALUD: WARNING → Sin CRS y coords no parecen lon/lat. Asigná el CRS correcto del talud.")
+                else:
+                    print("TALUD: Sin CRS pero coords parecen lon/lat; asumo EPSG:4326.")
+                    gdf_talud = gdf_talud.set_crs(epsg=4326, allow_override=True)
+
+            if gdf_talud.crs is not None and gdf_talud.crs.to_epsg() != 4326:
+                gdf_talud = gdf_talud.to_crs(epsg=4326)
+
+            #print("TALUD: bounds en WGS84:", gdf_talud.total_bounds)
+
+            # Clip a la ventana del mapa
+            ll_lon, ll_lat = -70, -55
+            ur_lon, ur_lat = -45, -35
+            bbox_wgs84 = box(ll_lon, ll_lat, ur_lon, ur_lat)
+            gdf_talud_clip = gpd.overlay(
+                gdf_talud,
+                gpd.GeoDataFrame(geometry=[bbox_wgs84], crs="EPSG:4326"),
+                how="intersection",
+                keep_geom_type=True
+            )
+            #print(f"TALUD: features antes={len(gdf_talud)}, después del clip={len(gdf_talud_clip)}")
+
+            # Dibujo por encima del raster
+            def _plot_coords(coords):
+                if not coords:
+                    return
+                lons, lats = zip(*coords)
+                xx, yy = m(lons, lats)
+                m.plot(xx, yy, '-', linewidth=2.0, color='black', zorder=20)
+
+            for geom in gdf_talud_clip.geometry:
+                if geom is None or geom.is_empty:
+                    continue
+                gt = geom.geom_type
+                if gt == 'LineString':
+                    _plot_coords(list(geom.coords))
+                elif gt == 'MultiLineString':
+                    for part in geom.geoms:
+                        _plot_coords(list(part.coords))
+                elif gt == 'Polygon':
+                    _plot_coords(list(geom.exterior.coords))
+                    for ring in geom.interiors:
+                        _plot_coords(list(ring.coords))
+                elif gt == 'MultiPolygon':
+                    for poly in geom.geoms:
+                        _plot_coords(list(poly.exterior.coords))
+                        for ring in poly.interiors:
+                            _plot_coords(list(ring.coords))
+
+            # leyenda opcional: ya se agregó el handle del talud en la leyenda combinada, no es necesario manipular el objeto Legend
+
+        except Exception as e:
+            print(f"Advertencia: no se pudo dibujar el talud (lectura/CRS/clip/plot): {e}")
+
+
+
 
         # --- guardar ---
         os.makedirs("figuras", exist_ok=True)
