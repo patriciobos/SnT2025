@@ -66,9 +66,9 @@ EARTH_R_KM = 6371.0088
 
 # Coordenadas objetivo con campo opcional "nombre"
 coordenadas_objetivo = [
-    {"lat": -38.5092, "lon": -56.4850, "nombre": "ZAIS"},
-    {"lat": -44.9512, "lon": -63.8894, "nombre": "GSJ"},
-    {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ"},
+    {"lat": -38.5092, "lon": -56.4850, "nombre": "ZAIS",  "color": "red", "marker": "o"},
+    {"lat": -44.9512, "lon": -63.8894, "nombre": "GSJ",   "color": "39FF14", "marker": "^"},
+    {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ", "color": "orange", "marker": "s"},
 ]
 
 # Ciudades argentinas
@@ -100,8 +100,12 @@ def extraer_frecuencia(nombre_archivo):
 def obtener_punto_zona(zona):
     for entry in coordenadas_objetivo:
         if entry["nombre"].lower() == zona.lower():
-            return entry["lon"], entry["lat"], entry["nombre"]
-    return None, None, None
+            color = entry.get("color", "red")
+            # Si el color es '39FF14', usar formato hexadecimal
+            if color.lower() == "39ff14":
+                color = "#39FF14"
+            return entry["lon"], entry["lat"], entry["nombre"], color, entry.get("marker", "o")
+    return None, None, None, None, None
 
 def _azimuth(lat1, lon1, lat2, lon2):
     """Acimut (grados 0-360) de (lat1,lon1) hacia (lat2,lon2). Soporta arrays en lat2/lon2."""
@@ -232,7 +236,7 @@ def procesar_archivo(ruta_archivo):
                 print(f"[INFO] Excluidas {excluidas}/{total} filas por proximidad a excluir.csv")
 
         # === PUNTO DE CÁLCULO (para sector de exclusión) ===
-        punto_lon, punto_lat, punto_nombre = obtener_punto_zona(ZONA)
+        punto_lon, punto_lat, punto_nombre, punto_color, punto_marker = obtener_punto_zona(ZONA)
 
         # === FIGURA Y MAPA CON LÍMITES FIJOS ===
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -264,7 +268,9 @@ def procesar_archivo(ruta_archivo):
         for ciudad in ciudades_argentinas:
             cx, cy = m(ciudad["lon"], ciudad["lat"])
             m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-            plt.text(cx, cy, ciudad["nombre"], fontsize=8, ha='right', va='top')
+            plt.text(cx, cy, ciudad["nombre"], fontsize=8, ha='right', va='top',
+                     bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+                     )
 
         # Etiqueta "Argentina"
         plt.text(0.15, 0.9, "Argentina", transform=ax.transAxes,
@@ -369,7 +375,31 @@ def procesar_archivo(ruta_archivo):
         # === PUNTO DE CÁLCULO ===
         if (punto_lon is not None) and (punto_lat is not None):
             x_punto, y_punto = m(punto_lon, punto_lat)
-            m.plot(x_punto, y_punto, 'kx', markersize=8, markeredgewidth=2, label=f'Buoy location: {display_zona}')
+            m.plot(
+                x_punto, y_punto,
+                marker=punto_marker,
+                color=punto_color,
+                markersize=10,
+                markeredgecolor='black',
+                markeredgewidth=2,
+                label=f'Buoy location: {display_zona}'
+            )
+            # Referencia en la leyenda con mismo marker, tamaño y borde negro
+            from matplotlib.lines import Line2D
+            handle_punto = Line2D(
+                [0], [0],
+                marker=punto_marker,
+                markerfacecolor=punto_color,
+                markeredgecolor='black',
+                markeredgewidth=2,
+                markersize=10,
+                linestyle='None',
+                linewidth=0,
+                label=f'Buoy location: {display_zona}'
+            )
+            # Agrega el handle del punto de cálculo y el de la plataforma
+            handle_plataforma = Line2D([], [], color='gray', linewidth=1.5, label='Argentine Continental Shelf')
+            plt.legend(handles=[handle_punto, handle_plataforma], loc='lower right', fontsize=14)
 
 
         # === ARCOS/SECTOR DE EXCLUSIÓN (trazado) ===
@@ -425,11 +455,11 @@ def procesar_archivo(ruta_archivo):
         # === COLORBAR, LEYENDA, TÍTULO, GUARDADO ===
         # Reduce el tamaño del colorbar usando shrink
         cbar = m.colorbar(sc_interp, location='right', pad="5%", shrink=0.7)
-        cbar.set_label("TL [dB]", labelpad=-15, loc='bottom', rotation=0)
+        cbar.set_label("TL(dB)", labelpad=-15, loc='bottom', rotation=0, fontsize=16)
         cbar.ax.xaxis.set_label_position('bottom')
         cbar.ax.xaxis.set_ticks_position('bottom')
-        plt.legend(loc='lower right')
-        plt.title(f"Location: {display_zona} - TL at {frecuencia} Hz - Z = 8 m.", fontsize=18)
+        
+        plt.title(f"Location: {display_zona} - TL at {frecuencia} Hz - z = 8 m.", fontsize=18)
 
 
 
@@ -513,7 +543,7 @@ if __name__ == "__main__":
     with multiprocessing.Pool() as pool:
         pool.map(procesar_archivo, archivos)
 
-    print("✅ Todos los archivos procesados.")
-    # GIF (loop infinito) y MP4 (una pasada)
-    crear_gif(CARPETA_OUTPUT, ZONA, VAR_TL, duracion=1.0)
-    crear_mp4(CARPETA_OUTPUT, ZONA, VAR_TL, fps=24)
+    # print("✅ Todos los archivos procesados.")
+    # # GIF (loop infinito) y MP4 (una pasada)
+    # crear_gif(CARPETA_OUTPUT, ZONA, VAR_TL, duracion=1.0)
+    # crear_mp4(CARPETA_OUTPUT, ZONA, VAR_TL, fps=24)

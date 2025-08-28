@@ -295,9 +295,17 @@ def procesar_archivo(ruta_archivo):
         # === PUNTO DE CÁLCULO ===
         if (punto_lon is not None) and (punto_lat is not None):
             x_punto, y_punto = m(punto_lon, punto_lat)
-            m.plot(x_punto, y_punto, 'kx', markersize=8, markeredgewidth=2, label=f'Buoy location: {display_zona}')
+            m.plot(x_punto, y_punto, 'kx', 
+                   markersize=10,
+                   markeredgecolor='black', 
+                   markeredgewidth=2, 
+                   label=f'Buoy location: {display_zona}'
+                   )
 
 
+                
+                
+                
         # === ARCOS/SECTOR DE EXCLUSIÓN (trazado) ===
         if PLOT_EXCLUSION_ARCS and (punto_lon is not None) and (punto_lat is not None):
             ang_a = _azimuth(punto_lat, punto_lon, A_LAT, A_LON)
