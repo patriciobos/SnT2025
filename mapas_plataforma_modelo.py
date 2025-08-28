@@ -20,7 +20,7 @@ import imageio
 from matplotlib.colors import Normalize
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "gsj"                     # opciones: 'zais', 'gsj', 'arasj'
+ZONA = "zais"                     # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"                 # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
 FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
@@ -374,7 +374,7 @@ def procesar_archivo(ruta_archivo):
         # === PUNTO DE CÁLCULO ===
         if (punto_lon is not None) and (punto_lat is not None):
             x_punto, y_punto = m(punto_lon, punto_lat)
-            m.plot(x_punto, y_punto, 'r*', markersize=10, label=f'Buoy location: {display_zona}')
+            m.plot(x_punto, y_punto, 'g^', markersize=10, label=f'Buoy location: {display_zona}')
 
 
         # === ARCOS/SECTOR DE EXCLUSIÓN (trazado) ===
@@ -727,7 +727,7 @@ def generar_mapa_puntos(zona: str):
     if p_lon is not None and p_lat is not None:
         xz, yz = m(p_lon, p_lat)
         buoy_handle = m.plot(
-            xz, yz, 'r*', markersize=10,
+            xz, yz, 'ro', markersize=10, markeredgecolor='black', markeredgewidth=2,
             label=f'Buoy location: {display_zona}', zorder=7
         )[0]
 
