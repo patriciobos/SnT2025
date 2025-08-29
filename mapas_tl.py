@@ -160,7 +160,7 @@ def procesar_archivo(filename):
         for ciudad in ciudades_argentinas:
             cx, cy = m(ciudad["lon"], ciudad["lat"])
             m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=8, ha='center', va='bottom',
+            plt.text(cx + 5000, cy + 5000, ciudad["nombre"], fontsize=12, ha='center', va='bottom',
                      bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
                      )
 
@@ -198,10 +198,10 @@ def procesar_archivo(filename):
             )
         # --- leyenda combinada: puntos objetivo + talud ---
         from matplotlib.lines import Line2D
-        handle_talud = Line2D([0], [0], color='black', lw=2.0, label='Continental slope')
+        handle_talud = Line2D([0], [0], color='black', lw=2.0, label='200 m isobath')
         handles_combinados = handles_objetivo + [handle_talud]
         labels_combinados = [h.get_label() for h in handles_combinados]
-        ax_main.legend(handles=handles_combinados, fontsize=12, fontweight='bold', labels=labels_combinados, loc='upper right', frameon=True)
+        ax_main.legend(handles=handles_combinados, fontsize=12, prop={'weight': 'bold'}, labels=labels_combinados, loc='upper right', frameon=True)
 
         # Inlet planisferio
         ax_inlet = fig.add_axes([0.57, 0.065, 0.22, 0.22])

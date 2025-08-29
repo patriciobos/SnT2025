@@ -20,9 +20,10 @@ import imageio
 from matplotlib.colors import Normalize
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "zais"                     # opciones: 'zais', 'gsj', 'arasj'
+ZONA = "gsj"                     # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"                 # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
-FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
+# FRECUENCIA_OBJETIVO puede ser None, un float, o una lista de floats
+FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, [100.0, 50.0] para varias, o None para procesar todas
 CARPETA_INPUT = "input-platform"
 CARPETA_OUTPUT = "mapas"
 UMBRAL_TL_HIGH = 200
@@ -71,9 +72,9 @@ EARTH_R_KM = 6371.0088
 
 # Coordenadas objetivo con campo opcional "nombre"
 coordenadas_objetivo = [
-    {"lat": -38.5092, "lon": -56.4850, "nombre": "ZAIS"},
-    {"lat": -44.9512, "lon": -63.8894, "nombre": "GSJ"},
-    {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ"},
+    {"lat": -38.5092, "lon": -56.4850, "nombre": "ZAIS",  "color": "red", "marker": "o"},
+    {"lat": -44.9512, "lon": -63.8894, "nombre": "GSJ",   "color": "39FF14", "marker": "^"},
+    {"lat": -45.9501, "lon": -59.7736, "nombre": "ARASJ", "color": "orange", "marker": "s"},
 ]
 
 # Ciudades argentinas
@@ -105,8 +106,12 @@ def extraer_frecuencia(nombre_archivo):
 def obtener_punto_zona(zona):
     for entry in coordenadas_objetivo:
         if entry["nombre"].lower() == zona.lower():
-            return entry["lon"], entry["lat"], entry["nombre"]
-    return None, None, None
+            color = entry.get("color", "red")
+            # Si el color es '39FF14', usar formato hexadecimal
+            if color.lower() == "39ff14":
+                color = "#39FF14"
+            return entry["lon"], entry["lat"], entry["nombre"], color, entry.get("marker", "o")
+    return None, None, None, None, None
 
 def _azimuth(lat1, lon1, lat2, lon2):
     """Acimut (grados 0-360) de (lat1,lon1) hacia (lat2,lon2). Soporta arrays en lat2/lon2."""
@@ -191,8 +196,13 @@ def procesar_archivo(ruta_archivo):
             return
 
         # Filtro por frecuencia objetivo (si corresponde)
-        if FRECUENCIA_OBJETIVO is not None and abs(frecuencia - FRECUENCIA_OBJETIVO) > 0.01:
-            return
+        if FRECUENCIA_OBJETIVO is not None:
+            if isinstance(FRECUENCIA_OBJETIVO, (list, tuple, set)):
+                if not any(abs(frecuencia - f) < 0.01 for f in FRECUENCIA_OBJETIVO):
+                    return
+            else:
+                if abs(frecuencia - FRECUENCIA_OBJETIVO) > 0.01:
+                    return
 
         # === LECTURA Y FILTROS BÁSICOS ===
         df = pd.read_csv(ruta_archivo)
@@ -237,7 +247,8 @@ def procesar_archivo(ruta_archivo):
                 print(f"[INFO] Excluidas {excluidas}/{total} filas por proximidad a excluir.csv")
 
         # === PUNTO DE CÁLCULO (para sector de exclusión) ===
-        punto_lon, punto_lat, punto_nombre = obtener_punto_zona(ZONA)
+        punto_lon, punto_lat, punto_nombre, punto_color, punto_marker = obtener_punto_zona(ZONA)
+
 
         # === FIGURA Y MAPA CON LÍMITES FIJOS ===
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -269,7 +280,9 @@ def procesar_archivo(ruta_archivo):
         for ciudad in ciudades_argentinas:
             cx, cy = m(ciudad["lon"], ciudad["lat"])
             m.plot(cx, cy, marker='o', color='black', markersize=4, zorder=5)
-            plt.text(cx, cy, ciudad["nombre"], fontsize=8, ha='right', va='top')
+            plt.text(cx, cy, ciudad["nombre"], fontsize=8, ha='right', va='top',
+                     bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+                     )
 
         # Etiqueta "Argentina"
         plt.text(0.15, 0.9, "Argentina", transform=ax.transAxes,
@@ -332,15 +345,15 @@ def procesar_archivo(ruta_archivo):
             & ~np.isnan(grid_TL)
         )
 
-        # === PLOTEO (scatter en cuadrícula) con colormap invertido y escala fija ===
-        cmap_inv = plt.get_cmap('viridis').reversed()
+        # === PLOTEO (scatter en cuadrícula) con colormap tipo jet (Matlab) y escala fija ===
+        cmap_jet = plt.get_cmap('jet').reversed()
         norm = Normalize(vmin=UMBRAL_TL_LOW, vmax=UMBRAL_TL_HIGH)
 
         x_plot, y_plot = m(lon_mesh[mask_valid], lat_mesh[mask_valid])
         sc_interp = m.scatter(
             x_plot, y_plot,
             c=grid_TL[mask_valid],
-            cmap=cmap_inv,
+            cmap=cmap_jet,
             norm=norm,
             marker='s', s=20, edgecolor='none'
         )
@@ -371,11 +384,19 @@ def procesar_archivo(ruta_archivo):
             print(f"[WARN] No se pudo dibujar el SHP de plataforma: {e}")
 
 
-        # === PUNTO DE CÁLCULO ===
         if (punto_lon is not None) and (punto_lat is not None):
             x_punto, y_punto = m(punto_lon, punto_lat)
-            m.plot(x_punto, y_punto, 'g^', markersize=10, label=f'Buoy location: {display_zona}')
-
+            m.plot(
+                x_punto, y_punto,
+                marker=punto_marker,
+                color=punto_color,
+                markersize=10,
+                markeredgecolor='black',
+                markeredgewidth=2,
+                linestyle='None',
+                linewidth=0,
+                label=f'Buoy location: {display_zona}'
+            )
 
         # === ARCOS/SECTOR DE EXCLUSIÓN (trazado) ===
         if PLOT_EXCLUSION_ARCS and (punto_lon is not None) and (punto_lat is not None):
@@ -582,8 +603,15 @@ def _recolectar_datos_filtrados_por_zona(zona: str) -> pd.DataFrame:
     dfs = []
     for ruta in archivos:
         freq = extraer_frecuencia(os.path.basename(ruta))
-        if freq is None or abs(freq - FRECUENCIA_FIJA_PUNTOS) > 0.01:
+        # Permitir que FRECUENCIA_FIJA_PUNTOS sea lista
+        if freq is None:
             continue
+        if isinstance(FRECUENCIA_FIJA_PUNTOS, (list, tuple, set)):
+            if not any(abs(freq - f) < 0.01 for f in FRECUENCIA_FIJA_PUNTOS):
+                continue
+        else:
+            if abs(freq - FRECUENCIA_FIJA_PUNTOS) > 0.01:
+                continue
         df = pd.read_csv(ruta)
         if not {'lat', 'lon', VAR_TL, 'bat'}.issubset(df.columns):
             print(f"[WARN] ({os.path.basename(ruta)}) faltan columnas; se omite.")
@@ -604,7 +632,7 @@ def _recolectar_datos_filtrados_por_zona(zona: str) -> pd.DataFrame:
     # 🔹 ya no aplicamos exclusiones de excluir.csv aquí 🔹
 
     # aplicar máscaras geográficas + sector A–B
-    p_lon, p_lat, _ = obtener_punto_zona(zona)
+    p_lon, p_lat, _ = obtener_punto_zona(zona)[:3]
     if p_lon is not None and p_lat is not None and len(datos) > 0:
         lat_arr = datos['lat'].to_numpy(dtype=float)
         lon_arr = datos['lon'].to_numpy(dtype=float)
@@ -722,14 +750,36 @@ def generar_mapa_puntos(zona: str):
         print(f"[INFO] No hay puntos para trazar en {zona} (tras filtros).")
 
     # punto de la zona (después, para quedar encima)
-    p_lon, p_lat, _ = obtener_punto_zona(zona)
+    punto = obtener_punto_zona(zona)
+    p_lon, p_lat = punto[0], punto[1]
+    punto_marker = punto[4]
+    punto_color = punto[3]
     buoy_handle = None
     if p_lon is not None and p_lat is not None:
         xz, yz = m(p_lon, p_lat)
-        buoy_handle = m.plot(
-            xz, yz, 'ro', markersize=10, markeredgecolor='black', markeredgewidth=2,
-            label=f'Buoy location: {display_zona}', zorder=7
-        )[0]
+        # Dibuja el marker en el mapa
+        m.plot(
+            xz, yz,
+            marker=punto_marker,
+            color=punto_color,
+            markersize=10,
+            markeredgecolor='black',
+            markeredgewidth=2,
+            zorder=7
+        )
+        # Handle para la leyenda: solo marker, sin línea
+        # from matplotlib.lines import Line2D
+        # buoy_handle = Line2D(
+        #     [0], [0],
+        #     marker=punto_marker,
+        #     markerfacecolor=punto_color,
+        #     markeredgecolor='black',
+        #     markeredgewidth=2,
+        #     markersize=10,
+        #     linestyle='None',
+        #     linewidth=0,
+        #     label=f'Buoy locatLALALAion: {display_zona}'
+        # )
 
     # arcos de exclusión (si aplica)
     if PLOT_EXCLUSION_ARCS and (p_lon is not None) and (p_lat is not None):
@@ -740,6 +790,8 @@ def generar_mapa_puntos(zona: str):
     if buoy_handle is not None: handles.append(buoy_handle)
     if points_handle is not None: handles.append(points_handle)
     if shelf_handle is not None: handles.append(shelf_handle)
+    # Elimina cualquier llamada previa a plt.legend para evitar duplicados
+    ax.get_legend().remove() if ax.get_legend() is not None else None
     if handles:
         ax.legend(handles=handles, loc='lower right')
 

@@ -20,7 +20,7 @@ import imageio
 from matplotlib.colors import Normalize
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "zais"                     # opciones: 'zais', 'gsj', 'arasj'
+ZONA = "gsj"                     # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"                 # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
 FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
@@ -195,10 +195,11 @@ def procesar_archivo(ruta_archivo):
 
         # === LECTURA Y FILTROS BÁSICOS ===
         df = pd.read_csv(ruta_archivo)
-        df = df[df[VAR_TL] > FILTRO_TL_MIN]
+        # Solo filtra para graficar, no borra del CSV
+        df_grafico = df[df[VAR_TL] > FILTRO_TL_MIN]
 
         columnas_necesarias = {'lat', 'lon', VAR_TL, 'bat'}
-        if not columnas_necesarias.issubset(df.columns):
+        if not columnas_necesarias.issubset(df_grafico.columns):
             print(f"[ERROR] Columnas faltantes en {nombre_archivo}")
             return
 
@@ -232,8 +233,17 @@ def procesar_archivo(ruta_archivo):
             if np.any(mask_excluir):
                 excluidas = int(mask_excluir.sum())
                 total = len(df)
-                df = df[~mask_excluir].copy()
+                df_filtrado = df[~mask_excluir].copy()
                 print(f"[INFO] Excluidas {excluidas}/{total} filas por proximidad a excluir.csv")
+                # Sobrescribe el CSV original solo con las filas excluidas por excluir.csv
+                df_filtrado.to_csv(ruta_archivo, index=False)
+                df = df_filtrado
+            else:
+                df = df.copy()
+        else:
+            df = df.copy()
+
+        # Usar df_grafico para graficar
 
         # === PUNTO DE CÁLCULO (para sector de exclusión) ===
         punto_lon, punto_lat, punto_nombre, punto_color, punto_marker = obtener_punto_zona(ZONA)
