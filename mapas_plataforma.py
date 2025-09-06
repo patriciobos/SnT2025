@@ -8,7 +8,7 @@ from matplotlib.colors import Normalize
 from multiprocessing import Pool, cpu_count
 
 # ========== CONFIGURACIÓN ==========
-ZONA = 'gsj'  # Elegir entre 'zais', 'arasj', 'gsj'
+ZONA = 'zais'  # Elegir entre 'zais', 'arasj', 'gsj'
 VARIABLE = 'tl_z_8'  # Elegir entre 'tl_z_8', 'tl_z_half', 'tl_z_max'
 CARPETA = 'input-platform'
 SALIDA = 'figuras'

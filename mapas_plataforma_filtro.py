@@ -20,7 +20,7 @@ import imageio
 from matplotlib.colors import Normalize
 
 # ==== CONFIGURACIÓN DEL USUARIO ====
-ZONA = "gsj"                     # opciones: 'zais', 'gsj', 'arasj'
+ZONA = "zais"                     # opciones: 'zais', 'gsj', 'arasj'
 VAR_TL = "tl_z_8"                 # opciones: 'tl_z_8', 'tl_z_half', 'tl_max_z'
 FRECUENCIA_OBJETIVO = None        # ejemplo: 100.0 para solo esa frecuencia, o None para procesar todas
 CARPETA_INPUT = "input-platform"
@@ -556,4 +556,4 @@ if __name__ == "__main__":
     # print("✅ Todos los archivos procesados.")
     # # GIF (loop infinito) y MP4 (una pasada)
     # crear_gif(CARPETA_OUTPUT, ZONA, VAR_TL, duracion=1.0)
-    # crear_mp4(CARPETA_OUTPUT, ZONA, VAR_TL, fps=24)
+    crear_mp4(CARPETA_OUTPUT, ZONA, VAR_TL, fps=24)
